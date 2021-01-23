@@ -1,0 +1,32 @@
+{
+  "name": "browser-tabs",
+  "version": "0.1.0",
+  "description": "Server just one page tool for gathering tabs from  browsers and send them to account infrastructure",
+  "main": "serv_tabs.js",
+  "scripts": {
+    "test": "node tests/all_tests.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/copious-world/browser-tabs.git"
+  },
+  "keywords": [
+    "brower",
+    "tabs",
+    "organizer",
+    "productivity"
+  ],
+  "author": "Richard Leddy",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/copious-world/browser-tabs/issues"
+  },
+  "homepage": "https://github.com/copious-world/browser-tabs#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "webextension-polyfill": "^0.7.0"
+  }
+}

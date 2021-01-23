@@ -1,0 +1,32 @@
+{
+
+  "description": "Organize tabs across browsers, and access management tools",
+  "manifest_version": 2,
+  "name": "come-to-my-tab-senses",
+  "version": "1.0",
+  "homepage_url": "https://www.copious.world",
+  "icons": {
+    "48": "icons/beasts-48.png"
+  },
+
+  "permissions": [
+    "tabs",
+    "activeTab"
+  ],
+ 
+  "browser_action": {
+    "default_icon": "icons/beasts-32.png",
+    "theme_icons": [{
+        "light": "icons/beasts-32-light.png",
+        "dark": "icons/beasts-32.png",
+        "size": 32
+    }],
+    "default_title": "Tab Senses",
+    "default_popup": "popup/tab-senses.html"
+  },
+
+  "web_accessible_resources": [
+    "docs/*.jpg"
+  ]
+
+}

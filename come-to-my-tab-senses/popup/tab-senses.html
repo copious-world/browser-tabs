@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="tab-senses.css"/>
+  </head>
+
+<body>
+  <div id="popup-content">
+    <div style="background-color: blanchedalmond;padding: 4px;border: 1px solid rgb(82, 9, 82)">
+      <button class="gather" >Gather Tabs</button>
+      <button class="saver" >Save Tabs</button>
+      <button class="getter" >Retrieve Tabs</button>
+      <input id="all_tabs" type="hidden" value="" >
+    </div>
+    <div style="background-color: rgb(250, 224, 186);padding: 4px;border: 1px solid rgb(9, 32, 82)" >
+        <label>Enter your email for fetching or saving:</label> <input type="email" name="uemail" id="uemail" value="" />
+    </div>
+  </div>
+
+  <div>
+      <h4>List of Open Tabs</h4> 
+      <ul id="tab_list">
+          
+      </ul>
+  </div>
+
+  <div>
+    <h4>List of Stored Topics</h4> 
+    <ul id="topic_list">
+        
+    </ul>
+</div>
+
+  <div id="error-content" class="hidden">
+    <p>Can't access the tab-senses tool from this web page.</p><p>Try a different page.</p>
+  </div>
+  <script src="tab-senses.js"></script>
+</body>
+
+</html>

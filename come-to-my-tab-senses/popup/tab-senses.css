@@ -1,0 +1,41 @@
+html, body {
+  width: 100%;
+  min-width: 300px;
+}
+
+.hidden {
+  display: none;
+}
+
+.button {
+  margin: 3% auto;
+  padding: 4px;
+  text-align: center;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+
+button {
+  cursor: pointer;
+}
+
+.gather:hover {
+  background-color: #CFF2F2;
+}
+
+.gather {
+  background-color: #E5F2F2;
+}
+
+.saver {
+  background-color: #E5F2F2;
+}
+
+.getter {
+  background-color: #FBFBC9;
+}
+
+.getter:hover {
+  background-color: #EAEA9D;
+}
+

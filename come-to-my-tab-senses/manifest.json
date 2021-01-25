@@ -6,7 +6,7 @@
   "version": "1.0",
   "homepage_url": "https://www.copious.world",
   "icons": {
-    "48": "icons/beasts-48.png"
+    "48": "icons/copious-48.png"
   },
 
   "permissions": [
@@ -15,10 +15,10 @@
   ],
  
   "browser_action": {
-    "default_icon": "icons/beasts-32.png",
+    "default_icon": "icons/copiousLogo.png",
     "theme_icons": [{
-        "light": "icons/beasts-32-light.png",
-        "dark": "icons/beasts-32.png",
+        "light": "icons/copious-32-light.png",
+        "dark": "icons/copious-32.png",
         "size": 32
     }],
     "default_title": "Tab Senses",
@@ -26,7 +26,7 @@
   },
 
   "web_accessible_resources": [
-    "docs/*.jpg"
+    "docs/*.html"
   ]
 
 }

@@ -19,23 +19,98 @@ button {
   cursor: pointer;
 }
 
+.gather {
+  background-color: #E5F2F2;
+}
 .gather:hover {
   background-color: #CFF2F2;
 }
 
-.gather {
-  background-color: #E5F2F2;
-}
 
 .saver {
   background-color: #E5F2F2;
 }
+.saver:hover {
+  background-color: #CFF2F2;
+}
+
 
 .getter {
   background-color: #FBFBC9;
 }
-
 .getter:hover {
   background-color: #EAEA9D;
+}
+
+.wsaver {
+  background-color: #E5F2F2;
+}
+.wsaver:hover {
+  background-color: #CFF2F2;
+}
+
+
+.wgetter {
+  background-color: #FBFBC9;
+}
+.wgetter:hover {
+  background-color: #EAEA9D;
+}
+
+
+ /* Style the tab */
+ .tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+} 
+
+.PhIOtjDr_0 {
+  fill:none;
+  stroke:#1c1448;
+  stroke-width:4.59875107;
+  stroke-miterlimit:4;
+  stroke-dasharray: 2948 2950;
+  stroke-dashoffset: 2949;
+  animation: PhIOtjDr_draw 6666ms ease-in forwards;
+}
+
+@keyframes PhIOtjDr_draw {
+  100% {stroke-dashoffset: 0}
+}
+
+@keyframes PhIOtjDr_fade {
+  0% {stroke-opacity: 1}
+  97.1830985915493% {stroke-opacity: 1}
+  100% {stroke-opacity: 0}
 }
 

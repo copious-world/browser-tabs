@@ -5,6 +5,12 @@ const express = require('express')
 //
 const cors =  require('cors')
 
+
+process.on('SIGINT',(sig) => {
+    dump_topcis_and_domains()
+    process.exit(0)
+})
+
 //
 const port = 3111
 
@@ -14,6 +20,52 @@ app.use('/static', express.static(path.join(__dirname, 'public')))
 app.use(cors())
 app.use(express.json())
 
+
+let g_util_words = [
+    "of", "to", "you", "your", "and", "for", "in", "itself", "a", "or",
+    "the", "that", "in", "on", "-", "_", "|", "with", "has", "had", "have"
+]
+
+
+let punctual = /[^\w]+/g
+let digits = /\d+/g
+
+function rough_tokenize(string) {
+    //
+    string = string.replace(/\s\s+/g,' ')
+    string = string.replace('\'s','')
+    string = string.replace('ing ',' ')
+    string = string.replace('ion ','')
+    string = string.replace('\"','')
+    let starter = string.split(' ')
+    //
+    //
+    starter = starter.filter((txt) => {
+        //
+        if ( txt.length < 3 ) return false
+        //
+        txt = txt.toLowerCase()
+        if ( punctual.test(txt) ) {
+            return(false)
+        }
+        if ( g_util_words.indexOf(txt) >= 0 ) {
+            return(false)
+        }
+        if ( digits.test(txt) ) {
+            return(false)
+        }
+        //
+        return(true)
+    })
+
+    starter = starter.map(str => {
+        return str.toLowerCase()
+    })
+
+    console.log(starter)
+
+    return(starter)
+}
 
 
 // GATHER TOPICS AND DOMAINS... Keep track of all the links associated with tabs under topics and domains
@@ -96,6 +148,25 @@ function link_package_from(topic_list,topic,email) {
 
 
 
+class WordKeeper {
+
+    //
+    constructor(word) {
+        this._word = word
+        this._count = 0
+        this._url_list = {}
+    }
+
+    //
+    add_word(url,title) {
+        this._count++
+        this._url_list[url] = title
+    }
+}
+
+
+
+
 // UserKeeper_tabs
 ////  provides management of lists by user email....
 //
@@ -105,6 +176,7 @@ class UserKeeper_tabs {
     // // // // // // // // 
     constructor(email) {
         this.email = email
+        this._word_list = {}
         this._topics = []
         this._domains = []
         this._windows = []
@@ -148,7 +220,29 @@ class UserKeeper_tabs {
     inject_topics(tabs) {
         tabs.forEach(tab => {
             let {url, title} = tab
+            //
+            //this._word_list
+            //
+            let words = rough_tokenize(title)
+            for ( let word of words ) {
+                let word_keeper = this._word_list[word]
+                if ( word_keeper == undefined ) {
+                    word_keeper = new WordKeeper(word)
+                    this._word_list[word] = word_keeper
+                }
+                word_keeper.add_word(url,title)  // // // //
+            }
         })
+ 
+        for ( let word in this._word_list ) {
+            let word_keeper = this._word_list[word]
+            this._all_topics[word] = Object.keys(word_keeper._url_list)
+            this._topics.push({
+                "link" : `/${word}`,      // leading slash is added 
+                "descr" : word,
+            })
+        }
+
     }
 
     // ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -257,6 +351,13 @@ class UserKeeper_tabs {
 
 }
 
+
+
+
+function dump_topcis_and_domains() {
+    let all_data = JSON.stringify(g_active_user_map)
+    fs.writeFileSync("salvage_run.json",all_data)
+}
 
 
 

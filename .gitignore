@@ -1,3 +1,4 @@
 node_modules
 webextensions-examples
 public/*.min.js
+*.json

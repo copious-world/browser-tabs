@@ -21,12 +21,20 @@
             </svg>
         </a>
       </div>
-
-      <button class="gather" >Gather Tabs</button>
-      <button class="saver" >Save Tabs</button>
-      <button class="getter" >Retrieve Tabs</button>
-      <button class="wsaver" >Save Window</button>
-      <button class="wgetter" >Retrieve Windows</button>
+      <div style="height:38;display:inline-block">
+        <button class="gather" >Gather Tabs</button>
+        <button class="saver" >Save Tabs</button>
+        <button class="getter" >Retrieve Topics</button>        
+        <button class="dgetter" >Retrieve Domains</button>        
+      </div>
+      <div style="background-color: blanchedalmond;padding: 4px;border: 1px solid rgb(82, 9, 82)">
+        <div style="height:38;display:inline-block">
+          <button class="help_getter" style="background-color:rgb(245, 255, 236);font-weight: bolder;font-size: larger;box-shadow: lightgoldenrodyellow;border-radius: 50%;">?</button>
+          <button class="wgather" >Gather Window Tabs</button>
+          <button class="wsaver" >Save Window</button>
+          <button class="wgetter" >Retrieve Windows</button>
+      </div>
+      </div>
       <input id="all_tabs" type="hidden" value="" >
       <input id="window_tabs" type="hidden" value="" >
     </div>
@@ -39,12 +47,15 @@
   <div class="tab">
     <button id="pick-gathered_tabs" class="tablinks active" >Gathered</button>
     <button id="pick-requested_topics" class="tablinks" >Topics</button>
+    <button id="pick-requested_domains" class="tablinks" >Domains</button>
     <button id="pick-window_gathered" class="tablinks" >This Window Tabs</button>
     <button id="pick-requested_windows" class="tablinks" >Windows</button>
+    <button id="pick-requested_help" class="tablinks" >Help</button>
   </div>
 
   <div id="gathered_tabs" class="tabcontent" style="display: block;" >
-      <h4>List of Open Tabs</h4> 
+      <h4>List of Open Tabs</h4>
+      <div style="max-width: 300px;">Click on <b>Gather Tabs</b> to gather tabs from all windows</div>
       <ul id="tab_list">
           
       </ul>
@@ -52,13 +63,23 @@
 
   <div id="requested_topics" class="tabcontent" >
     <h4>List of Stored Topics</h4> 
+    <div style="max-width: 300px">Click on <b>Retrieve Tabs</b> to see all of the topics found in the tabs that you previously saved.</div>
     <ul id="topic_list">
+        
+    </ul>
+  </div>
+
+  <div id="requested_domains" class="tabcontent" >
+    <h4>List of Stored Topics</h4> 
+    <div style="max-width: 300px">Click on <b>Retrieve Domains</b> to see all of the topics found in the tabs that you previously saved.</div>
+    <ul id="domain_list">
         
     </ul>
   </div>
  
   <div id="window_gathered" class="tabcontent" >
     <h4>Tabs in This Window</h4> 
+    <div style="max-width: 300px">Click on <b>Gather Window Tabs</b> to gather tabs from this windows</div>
     <ul id="window_tab_list">
         
     </ul>
@@ -66,10 +87,19 @@
  
   <div id="requested_windows" class="tabcontent" >
     <h4>List of Stored Windows</h4> 
+    <div style="max-width: 300px">Click on <b>Retrieve Windows</b> to see all of the windows that you previously saved</div>
     <ul id="window_list">
         
     </ul>
   </div>
+
+  <div id="requested_help" class="tabcontent" style="background-color: rgb(253, 245, 229);cursor:pointer">
+    <h4>How to use</h4> 
+    <div id="help_display" style="max-width: 300px" style="background-color: inherit;color:rgb(133, 0, 0)">
+      help goes here
+    </div>
+  </div>
+ 
  
 
   <div id="error-content" class="hidden">

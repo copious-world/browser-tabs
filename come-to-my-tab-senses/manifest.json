@@ -1,6 +1,6 @@
 {
 
-  "description": "Organize tabs across browsers, and access management tools",
+  "description": "Organize tabs across browsers, and access management tools.",
   "manifest_version": 2,
   "name": "come-to-my-tab-senses",
   "version": "1.0",
@@ -27,6 +27,14 @@
 
   "web_accessible_resources": [
     "docs/*.html"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": [ "*://*.copious.world/*/dashboard.html",  "*://*.popsongnow.com/*/dashboard.html",
+         "file:///Users/richardleddy/Documents/GitHub/copious-transitions/sites/copious/dashboard.html" ],
+      "js": ["tab-catcher.js"]
+    }
   ]
 
 }

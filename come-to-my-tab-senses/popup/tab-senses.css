@@ -20,10 +20,12 @@ button {
 }
 
 .gather {
-  background-color: #E5F2F2;
+  background-color: #11531f;
+  color: white;
 }
 .gather:hover {
-  background-color: #CFF2F2;
+  background-color: #cfeeee;
+  color:#11531f
 }
 
 
@@ -31,7 +33,7 @@ button {
   background-color: #E5F2F2;
 }
 .saver:hover {
-  background-color: #CFF2F2;
+  background-color: #BFF2F2;
 }
 
 
@@ -39,14 +41,32 @@ button {
   background-color: #FBFBC9;
 }
 .getter:hover {
+  background-color: #DAEA9D;
+}
+
+.dgetter {
+  background-color: #FBFBC9;
+}
+.dgetter:hover {
   background-color: #EAEA9D;
 }
+
+
+.wgather {
+  background-color: #11531f;
+  color: white;
+}
+.wgather:hover {
+  background-color: #cfeeee;
+  color:#11531f
+}
+
 
 .wsaver {
   background-color: #E5F2F2;
 }
 .wsaver:hover {
-  background-color: #CFF2F2;
+  background-color: #BFF2F2;
 }
 
 
@@ -55,6 +75,15 @@ button {
 }
 .wgetter:hover {
   background-color: #EAEA9D;
+}
+
+
+.help_getter {
+  color:#064614;
+}
+.help_getter:hover {
+  background-color: #EAEA9D;
+  color:#064614;
 }
 
 

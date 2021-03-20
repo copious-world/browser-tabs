@@ -6,6 +6,10 @@ const express = require('express')
 const cors =  require('cors')
 
 
+
+const merge_categories_proc = require('./tabs_dimension_reducer')
+
+
 process.on('SIGINT',(sig) => {
     dump_topcis_and_domains()
     process.exit(0)
@@ -240,6 +244,15 @@ class UserKeeper_tabs {
             this._topics.push({
                 "link" : `/${word}`,      // leading slash is added 
                 "descr" : word,
+            })
+        }
+
+
+        if ( merge_categories_proc ) {
+            merge_categories_proc.spawn_reduction(this._word_list,(reduction) => {
+                this._word_list = reduction._word_list
+                this._all_topics = reduction._all_topics
+                this._topics = reduction._topics
             })
         }
 

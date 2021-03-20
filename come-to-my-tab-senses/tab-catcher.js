@@ -35,7 +35,8 @@
     function add_link_packge_from_extension(package_name,topics_or_domains) {
         //
         let result = {}
-        result.result = "Please enter a description"
+        result.decoded = true
+        result.abstract = "Please enter a description"
         result.links = topics_or_domains
         result.package_name = package_name
         result.file_name = package_name

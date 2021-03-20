@@ -222,6 +222,9 @@ class UserKeeper_tabs {
 
 
     inject_topics(tabs) {
+        //
+
+        
         tabs.forEach(tab => {
             let {url, title} = tab
             //
@@ -237,7 +240,7 @@ class UserKeeper_tabs {
                 word_keeper.add_word(url,title)  // // // //
             }
         })
- 
+        //
         for ( let word in this._word_list ) {
             let word_keeper = this._word_list[word]
             this._all_topics[word] = Object.keys(word_keeper._url_list)
@@ -246,13 +249,16 @@ class UserKeeper_tabs {
                 "descr" : word,
             })
         }
-
-
+        //
         if ( merge_categories_proc ) {
-            merge_categories_proc.spawn_reduction(this._word_list,(reduction) => {
-                this._word_list = reduction._word_list
-                this._all_topics = reduction._all_topics
-                this._topics = reduction._topics
+            setImmediate(() => {
+                merge_categories_proc.spawn_reduction(this._word_list,(reduction) => {
+                    if ( reduction && reduction._word_list &&  reduction._all_topics && reduction._topics ) {
+                        this._word_list = reduction._word_list
+                        this._all_topics = reduction._all_topics
+                        this._topics = reduction._topics
+                    }
+                })    
             })
         }
 

@@ -35,15 +35,12 @@
     function add_link_packge_from_extension(package_name,topics_or_domains) {
         //
         let result = {}
-        result.txt_full = "Please enter a description"
-        result.links = topics_or_domains,
+        result.result = "Please enter a description"
+        result.links = topics_or_domains
         result.package_name = package_name
+        result.file_name = package_name
         //
-        let package = {}
-        package.file_name = package_name
-        package.result = JSON.stringify(result)
-        //
-        messagePageScript(package)
+        messagePageScript(result)
         //
     }
 

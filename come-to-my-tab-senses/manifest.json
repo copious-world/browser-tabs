@@ -29,6 +29,12 @@
     "docs/*.html"
   ],
 
+  "background": {
+    "scripts": [
+        "./background.js"
+    ]
+  },
+
   "content_scripts": [
     {
       "matches": [ "*://*.copious.world/*/dashboard.html",  "*://*.popsongnow.com/*/dashboard.html",

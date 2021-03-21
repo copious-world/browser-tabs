@@ -12,6 +12,20 @@ const DEFAULT_CLICK_CONTEXT = "domains"
 let g_application_mail = false
 
 
+let g_keep_data_around = {
+  "windows" : "nada",
+  "topics" : "nada",
+  "domains" : "nada",
+  "gathered" : {
+    "tab_list" : "nada",
+    "window_tab_list" : "nada"
+  }
+}
+
+
+
+
+
 // Generic method for querying the server ... temporary tab storage....
 async function postData(url = '', data = {}, creds = 'omit', do_stringify = true, ctype) {
   let content_type = 'application/json'
@@ -47,6 +61,15 @@ async function postData(url = '', data = {}, creds = 'omit', do_stringify = true
 
 
 
+/**
+ *  --  Just log the error to the console.
+ */
+ function reportError(error) {
+  console.error(`Could not come to my tab senses: ${error}`);
+}
+
+
+
 
 /// INTERACT WITH TABS AND TAB DB
 
@@ -68,14 +91,27 @@ function logTabs(tab_tables,tabs) {
 }
 
 
-/**
- *  --  Just log the error to the console.
- */
-function reportError(error) {
-  console.error(`Could not come to my tab senses: ${error}`);
+// ---- ---- ---- ---- ---- ---- ----
+//
+function insert_tabs(tab_data,tabs_stored,list_loc) {
+
+  if ( tabs_stored && tabs_stored.length ) {
+    let data_deposit = document.getElementById(tabs_stored)  // store in a hidden element for passing around
+    data_deposit.value = JSON.stringify(tab_data)
+  }
+  //
+console.log("insert_tabs:  " + list_loc)
+console.log(tab_data)
+  g_keep_data_around.gathered[list_loc] = tab_data
+
+  let message_spot = document.getElementById(list_loc)
+  if ( message_spot !== undefined ) {
+    //
+    logTabs(message_spot,tab_data)
+    //
+  }
+
 }
-
-
 
 
 // GATHER TABS TOGETHER... either all tabs in all windows
@@ -95,29 +131,35 @@ function tab_gather(tabs,tabs_stored,list_loc) {
     try {
       insert_tabs(list,tabs_stored,list_loc)
     } catch (ee) {
-      alert(ee)
+      console.log(ee)
     }
     //
   } catch (e) {
-    alert(e)
+    console.log(e)
   }
 }
 
 
 function gather_tabs() {
-  browser.tabs.query({})
-  .then((tabs) => { tab_gather(tabs,'all_tabs','tab_list') })
-  .catch(reportError);
+  return new Promise ((resolve,reject) => {
+    browser.tabs.query({})
+    .then((tabs) => { tab_gather(tabs,'all_tabs','tab_list'); resolve(true); })
+    .catch(
+      (err) => { reportError(err); reject(err) }
+      );  
+  })
 }
 
 
 function gather_window_tabs() {
-  browser.tabs.query({ 'currentWindow': true })
-  .then((tabs) => { tab_gather(tabs,'window_tabs','window_tab_list') })
-  .catch(reportError);
-
+  return new Promise ((resolve,reject) => {
+    browser.tabs.query({ 'currentWindow': true })
+    .then((tabs) => { tab_gather(tabs,'window_tabs','window_tab_list'); resolve(true); })
+    .catch(
+      (err) => { reportError(err); reject(err) }
+      );  
+  })
 }
-
 
 // // // // // // // // // // // // // // // // // // //
 // // // // // // // // // // // // // // // // // // //
@@ -125,6 +167,9 @@ function gather_window_tabs() {
 
 
 function logTopic(topic_tables,topics,without_filter,click_context) {
+
+  g_keep_data_around[click_context] = topics
+
   topic_tables.innerHTML = ""
   for (let topic of topics) {   // these are links determined by the server; the links are to groups of tabs
     let tabs_finder = topic.link
@@ -186,6 +231,7 @@ async function retrieve_tab_topics(post_channel,result_location,without_filter,c
           let topic_spot = document.getElementById(result_location)
           if ( topic_spot ) {
             logTopic(topic_spot,data,without_filter,context)   // create buttons with links to groups of tabs
+            return true
           }
         }
       } else {
@@ -195,6 +241,7 @@ async function retrieve_tab_topics(post_channel,result_location,without_filter,c
   } catch(e) {
       alert(e.message)
   }
+  return false
 }
 
 
@@ -295,21 +342,6 @@ async function save_window() {
 
 
 
-// ---- ---- ---- ---- ---- ---- ----
-//
-function insert_tabs(tab_data,tabs_stored,list_loc) {
-
-  let data_deposit = document.getElementById(tabs_stored)
-  data_deposit.value = JSON.stringify(tab_data)
-
-  let message_spot = document.getElementById(list_loc)
-  if ( message_spot !== undefined ) {
-    //
-    logTabs(message_spot,tab_data)
-    //
-  }
-
-}
 
 
 // ---- ---- ---- ---- ---- ---- ----
@@ -400,50 +432,60 @@ function openResults(currentTarget, tabName) {
 }
 
 
-
 // USER INTERACTION...
 //
 function listenForClicks() {
-  document.addEventListener("click", (e) => {
-    if (e.target.classList.contains("gather")) {
-      gather_tabs()
-      let target =  document.getElementById("pick-gathered_tabs")
-      openResults(target, "gathered_tabs")
-    } else if ( e.target.classList.contains("getter") ) {
-      retrieve_tab_topics(SERVER_TOPICS_POST,"topic_list",false,"topics")    // retrieve all tabs last stored...
-      let target =  document.getElementById("pick-requested_topics")
-      openResults(target, "requested_topics")
-    } else if ( e.target.classList.contains("dgetter") ) {
-      retrieve_tab_topics(SERVER_DOMAIN_POST,"domain_list",false,"domains")    // retrieve all tabs last stored...
-      let target =  document.getElementById("pick-requested_domains")
-      openResults(target, "requested_domains")
-    } else if ( e.target.classList.contains("saver") ) {
-      save_tabs()
-    } else if ( e.target.classList.contains("wgather") ) {
-      gather_window_tabs()
-      let target =  document.getElementById("pick-window_gathered")
-      openResults(target, "window_gathered")
-    } else if ( e.target.classList.contains("wsaver") ) {
-      save_window()
-      let target =  document.getElementById("pick-window_gathered")
-      openResults(target, "window_gathered") 
-    } else if ( e.target.classList.contains("wgetter") ) {
-      retrieve_tab_topics(SERVER_WINDOW_POST,"window_list",true,"windows")   // retrieve links to window tab sets ... tabs last stored...
-      let target =  document.getElementById("pick-requested_windows")
-      openResults(target, "requested_windows")
-    } else if ( e.target.classList.contains("help_getter") || ( e.target.id === "pick-requested_help" )  ) {
-      show_help()
-      let target =  document.getElementById("pick-requested_help")
-      openResults(target, "requested_help")
-    } else if ( e.target.classList.contains("tablinks") ) {
-      let id = e.target.id
-      let tartget_name = (id.split('-'))[1]
-      //
-      openResults(e.currentTarget, tartget_name)
-    } else if ( (e.target.id === "requested_help") ) {
-      let target =  document.getElementById("pick-gathered_tabs")
-      openResults(target, "gathered_tabs")
+  document.addEventListener("click", async (e) => {
+    try {
+      if (e.target.classList.contains("gather")) {
+        await gather_tabs()
+        let target =  document.getElementById("pick-gathered_tabs")
+        openResults(target, "gathered_tabs")
+        save_everything()
+      } else if ( e.target.classList.contains("getter") ) {
+        await retrieve_tab_topics(SERVER_TOPICS_POST,"topic_list",false,"topics")    // retrieve all tabs last stored into the server...
+        let target =  document.getElementById("pick-requested_topics")
+        openResults(target, "requested_topics")
+        save_everything()
+      } else if ( e.target.classList.contains("dgetter") ) {
+        await retrieve_tab_topics(SERVER_DOMAIN_POST,"domain_list",false,"domains")    // retrieve all tabs last stored into the server...
+        let target =  document.getElementById("pick-requested_domains")
+        openResults(target, "requested_domains")
+        save_everything()
+      } else if ( e.target.classList.contains("saver") ) {
+        save_tabs()   // sends tabs to the server
+      } else if ( e.target.classList.contains("wgather") ) {
+        await gather_window_tabs()
+        let target =  document.getElementById("pick-window_gathered")
+        openResults(target, "window_gathered")
+        save_everything()
+      } else if ( e.target.classList.contains("wsaver") ) {
+        save_window()
+        let target =  document.getElementById("pick-window_gathered")
+        openResults(target, "window_gathered") 
+        save_everything()
+      } else if ( e.target.classList.contains("wgetter") ) {
+        await retrieve_tab_topics(SERVER_WINDOW_POST,"window_list",true,"windows")   // retrieve links to window tab sets ... tabs last stored into server...
+        let target =  document.getElementById("pick-requested_windows")
+        openResults(target, "requested_windows")
+        save_everything()
+      } else if ( e.target.classList.contains("help_getter") || ( e.target.id === "pick-requested_help" )  ) {
+        show_help()
+        let target =  document.getElementById("pick-requested_help")
+        openResults(target, "requested_help")
+      } else if ( e.target.classList.contains("tablinks") ) {  // show what's there
+        let id = e.target.id
+        let tartget_name = (id.split('-'))[1]
+        //
+        openResults(e.currentTarget, tartget_name)
+      } else if ( (e.target.id === "requested_help") ) {   // turn off help and look at something else
+        let target =  document.getElementById("pick-gathered_tabs")
+        openResults(target, "gathered_tabs")
+      }
+    } catch (err) {
+        
     }
+
   });
 }
 
@@ -486,10 +528,14 @@ function hide_help() {
 //
 function initialize_dashboard() {
   //
+  console.log("initiaize")
+
+  initialize_db()
+
   g_application_mail = false
   //
   let initializer = (tabs) => {
-    browser.tabs.sendMessage( tabs[0].id, { "command" : "initial"})
+    browser.tabs.sendMessage( tabs[0].id, { "command" : "initial" })
     .then( response => {
         g_application_mail = false  // reset 
         //
@@ -498,11 +544,13 @@ function initialize_dashboard() {
           g_application_mail = mail
           let user_mail = document.getElementById('uemail')
           user_mail.value = mail
+          load_previous(g_application_mail)
         }
         //
     }).catch(reportError);
   }
   //
+  console.log("initiaize")
   browser.tabs.query({active: true, currentWindow: true}).then(initializer)
   .catch(reportError);
   //
@@ -525,6 +573,108 @@ function inject_topic_into_dashboard(package_name,link_package) {
 }
 
 
+function save_everything() {
+
+  console.log("save_everything::  ")
+
+  let data_to_save = JSON.stringify(g_keep_data_around)
+  let email = g_application_mail
+  if ( email ) {
+    let storage_record = {
+      "command" : "update",
+      "email" : email,
+      "user_tabs" : {
+        "email" : email,
+        "data" : data_to_save
+      }
+    }
+    console.log("save_everything::  " + data_to_save)
+    //
+    browser.runtime.sendMessage(storage_record)
+  }
+}
+  
+function delete_everything() {
+  let email = g_application_mail
+  if ( email ) {
+    browser.runtime.sendMessage({
+        "command": 'delete',
+        "email": email
+    })
+  }
+}
+
+
+
+function load_previous(email) {
+  if ( email !== false  ) {
+    console.log("sending message")
+    browser.runtime.sendMessage({
+      "command": 'get',
+      "email": email
+    }).then( response => {
+      //
+      if ( response === false ) {
+        // initialized similarly on loading this script.
+        g_keep_data_around = {
+          "windows" : "nada",
+          "topics" : "nada",
+          "domains" : "nada",
+          "gathered" : {
+            "tab_list" : "nada",
+            "window_tab_list" : "nada"
+          }
+        }
+        // 
+        console.log("trying to save")
+        save_everything()
+        return;
+      }
+      let data = response.data
+      g_keep_data_around = JSON.parse(data)
+      console.log(g_keep_data_around)
+      //
+      if ( g_keep_data_around.topics !== "nada" ) {
+        let topic_spot = document.getElementById("topic_list")
+        if ( topic_spot ) {
+          logTopic(topic_spot,g_keep_data_around.topics,false,"topics")   // create buttons with links to groups of tabs
+        }  
+      }
+      //
+      if ( g_keep_data_around.domains !== "nada" ) {
+        topic_spot = document.getElementById("domain_list")
+        if ( topic_spot ) {
+          logTopic(topic_spot,g_keep_data_around.domains,false,"domains")   // create buttons with links to groups of tabs
+        }
+      }
+      //
+      if ( g_keep_data_around.domains !== "nada" ) {
+        topic_spot = document.getElementById("window_list")
+        if ( topic_spot ) {
+          logTopic(topic_spot,g_keep_data_around.windows,false,"windows")   // create buttons with links to groups of tabs
+        }
+      }
+      //
+      if ( g_keep_data_around.gathered.tab_list !== "nada" ) {
+        insert_tabs(g_keep_data_around.gathered.tab_list,"","tab_list")
+      }
+      //
+      if ( g_keep_data_around.gathered.window_tab_list !== "nada" ) {
+        insert_tabs(g_keep_data_around.gathered.window_tab_list,"","window_tab_list")
+      }
+      //
+    }).catch(reportError);
+  }
+}
+
+function initialize_db() {
+  browser.runtime.sendMessage({
+    "command": 'db-initial'
+  })
+
+  console.log("db initialize called")
+}
+
 /**
  * When the popup loads, inject a content script into the active tab,
  * and add a click handler.
@@ -532,3 +682,4 @@ function inject_topic_into_dashboard(package_name,link_package) {
 */
 listenForClicks()
 initialize_dashboard()
+

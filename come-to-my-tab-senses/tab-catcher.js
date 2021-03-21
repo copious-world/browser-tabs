@@ -48,15 +48,17 @@
     function get_dashboard_owner() {
 
         let shar = document.getElementById("shareable")
-        let v = shar.value
-
-        try {
-            let info = JSON.parse(v)
-            g_current_dashboard_host = '*' //info.page_host
-            g_dashboard_info = info
-        } catch(e) {}
-
-        return(g_dashboard_info.email)
+        if ( shar ) {
+          let v = shar.value
+          try {
+              let info = JSON.parse(v)
+              g_current_dashboard_host = '*' //info.page_host
+              g_dashboard_info = info
+          } catch(e) {}
+  
+          return(g_dashboard_info.email)  
+        }
+        return('al@oicious.com')
     }
 
 
@@ -65,7 +67,11 @@
      * Call "add_link_packge_from_extension()" 
     */
     browser.runtime.onMessage.addListener((message) => {
+      if ( message === undefined ) return
+      if ( message.command === undefined ) return
+  
         //
+      console.log("tab-catcher " + message.command)
       if ( message.command === "topics" ) {
           //
           add_link_packge_from_extension(message.package_name,message.topics_or_domains);

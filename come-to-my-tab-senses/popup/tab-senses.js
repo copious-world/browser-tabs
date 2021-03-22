@@ -64,7 +64,7 @@ async function postData(url = '', data = {}, creds = 'omit', do_stringify = true
 /**
  *  --  Just log the error to the console.
  */
- function reportError(error) {
+function reportError(error) {
   console.error(`Could not come to my tab senses: ${error}`);
 }
 
@@ -100,10 +100,8 @@ function insert_tabs(tab_data,tabs_stored,list_loc) {
     data_deposit.value = JSON.stringify(tab_data)
   }
   //
-console.log("insert_tabs:  " + list_loc)
-console.log(tab_data)
   g_keep_data_around.gathered[list_loc] = tab_data
-
+  //
   let message_spot = document.getElementById(list_loc)
   if ( message_spot !== undefined ) {
     //
@@ -205,6 +203,14 @@ function logTopic(topic_tables,topics,without_filter,click_context) {
         element.appendChild(store_it)
         store_it.innerHTML = "&#8595;"
       }
+
+      if ( topic.count !== undefined ) {
+        let counter = document.createElement('span')
+        counter.className = "counter_box"
+        counter.innerHTML = topic.count
+        element.appendChild(counter)
+      }
+
       element.appendChild(btn)
       btn.innerHTML = topic.descr
       topic_tables.appendChild(element)
@@ -278,7 +284,7 @@ function spawn_tabs(data,without_filter) {
 // STORE ... 
 //
 
-async function tab_field_saver(tab_field,post_action) {
+async function tab_field_saver(tab_field,post_action,opt_cluster_points) {
   let data_deposit = document.getElementById(tab_field)
   let tab_info = data_deposit.value
 
@@ -292,6 +298,9 @@ async function tab_field_saver(tab_field,post_action) {
                   let postable = {
                       "email" : email,
                       "tabs" : tabs_to_send
+                  }
+                  if ( opt_cluster_points !== undefined ) {
+                    postable.c_points = opt_cluster_points
                   }
                   let response = await postData(post_action,postable)
                   if ( response.OK === "true" ) {
@@ -318,10 +327,33 @@ async function tab_field_saver(tab_field,post_action) {
 }
 
 
-function save_tabs() {
-  tab_field_saver('all_tabs',SERVER_PUT_TABS)
+function get_cluster_point_list() {
+  let points = []
+  for ( let i = 0; i < 5; i++ ) {
+    let c_val_holder = document.getElementById(`uc_${i+1}`)
+    if ( c_val_holder ) {
+      let term_point = c_val_holder.value
+      term_point = term_point.trim()
+      if ( term_point.length ) {
+        points.push(term_point)
+      }
+    }
+  }
+  return points
 }
 
+async function save_tabs(cluster_points) {
+  if ( cluster_points && cluster_points.length ) {
+    await tab_field_saver('all_tabs',SERVER_PUT_TABS,cluster_points)
+  } else {
+    await tab_field_saver('all_tabs',SERVER_PUT_TABS)
+  }
+}
+/*
+
+let cluster_points = get_cluster_point_list()
+
+*/
 
 
 async function save_window() {
@@ -454,6 +486,17 @@ function listenForClicks() {
         save_everything()
       } else if ( e.target.classList.contains("saver") ) {
         save_tabs()   // sends tabs to the server
+        let target =  document.getElementById("pick-gathered_tabs")
+        openResults(target, "gathered_tabs")
+      } else if ( e.target.classList.contains("cluster") ) {
+        let cluster_points = get_cluster_point_list()
+        await save_tabs(cluster_points)   // sends tabs to the server
+        //
+        // update the cluster display without prompting the user to do so...
+        await retrieve_tab_topics(SERVER_TOPICS_POST,"topic_list",false,"topics")    // retrieve all tabs last stored into the server...
+        let target =  document.getElementById("pick-requested_topics")
+        openResults(target, "requested_topics")
+        save_everything()
       } else if ( e.target.classList.contains("wgather") ) {
         await gather_window_tabs()
         let target =  document.getElementById("pick-window_gathered")

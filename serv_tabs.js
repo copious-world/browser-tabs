@@ -153,18 +153,22 @@ function link_package_from(topic_list,topic,email) {
 
 
 class WordKeeper {
-
     //
     constructor(word) {
         this._word = word
         this._count = 0
         this._url_list = {}
+        this.keep = false
     }
 
     //
     add_word(url,title) {
         this._count++
         this._url_list[url] = title
+    }
+
+    clear() {
+        this._url_list = {}
     }
 }
 
@@ -182,6 +186,7 @@ class UserKeeper_tabs {
         this.email = email
         this._word_list = {}
         this._topics = []
+        this._topic_dims = []
         this._domains = []
         this._windows = []
         this._all_domains = {}
@@ -189,6 +194,10 @@ class UserKeeper_tabs {
         //
     }
 
+
+    set_prefered_dimensions(cluster_points) {
+        this._topic_dims = cluster_points
+    }
 
     // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
     get_topics() {
@@ -221,10 +230,83 @@ class UserKeeper_tabs {
     }
 
 
+    // ---- ---- ---- ---- ---- ---- ---- ---- ----
+    // ---- ---- ---- ---- ---- ---- ---- ---- ----
+    // ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+    // this is a very basic prune existing for speed 
+    // for cutting classes that are basically redundant.
+    prune_words(urls_to_words) {
+        //
+        let salvage = []
+        let removals = []
+        //
+        for ( let url in urls_to_words ) {
+            //
+            let w_list = urls_to_words[url]
+            //
+            if ( w_list.length === 0 ) {
+                salvage.push(url)
+            } else if ( w_list.length === 1 ) {
+                let word = w_list[0]
+                let w_keeper = this._word_list[word]
+                w_keeper.keep = true
+            } else {
+                //
+                w_list.sort((w1,w2) => {
+                    //
+                    let w_keeper_1 = this._word_list[w1]
+                    let w_keeper_2 = this._word_list[w2]
+                    let count_diff = (w_keeper_2._count - w_keeper_1._count)
+                    let len_diff = (w_keeper_2._word.length - w_keeper_1._word.length)
+                    //
+                    return( 10*count_diff + 0.25*len_diff )
+                })
+                //
+                let keeper = w_list.shift()
+                if ( w_list.length ) {
+                    let keepers = []
+                    while ( w_list.length  ) {
+                        let word = w_list.pop()
+                        let w_keeper = this._word_list[word]
+                        if ( w_keeper.keep ) {
+                            keepers.push(word)
+                        } else {
+                            if ( this._topic_dims.indexOf(word) >= 0 ) {
+                                w_keeper.keep = true
+                                keepers.push(word)
+                            } else {
+                                if ( w_keeper._count === 1 ) {
+                                    removals.push(w_keeper)
+                                } else {
+                                    this._word_list.push(word)
+                                    break
+                                }    
+                            }
+                        }
+                    }
+                    w_list = w_list.concat(keepers)
+                }
+                w_list.unshift(keeper)
+                urls_to_words[url] = w_list
+            }
+        }
+        //
+        for ( let rem of removals ) {
+            let word = rem._word
+            rem.clear()
+            delete this._word_list[word]
+        }
+    }
+
+
+    // // // // // // 
+    //
     inject_topics(tabs) {
         //
-
-        
+        let urls_to_words = {} 
+        //
+        //
         tabs.forEach(tab => {
             let {url, title} = tab
             //
@@ -238,21 +320,41 @@ class UserKeeper_tabs {
                     this._word_list[word] = word_keeper
                 }
                 word_keeper.add_word(url,title)  // // // //
+                if ( urls_to_words[url] === undefined ) {
+                    urls_to_words[url] = []
+                }
+                urls_to_words[url].push(word)
             }
         })
         //
+        this.prune_words(urls_to_words)
+        //
+        this._topics = []
         for ( let word in this._word_list ) {
             let word_keeper = this._word_list[word]
             this._all_topics[word] = Object.keys(word_keeper._url_list)
             this._topics.push({
                 "link" : `/${word}`,      // leading slash is added 
                 "descr" : word,
+                "count" : word_keeper._count
             })
         }
         //
+        this._topics.sort((t1,t2) => {
+            let wk1 = this._word_list[t1.descr]
+            let wk2 = this._word_list[t2.descr]
+            if ( wk1 && wk2 ) {
+                return(wk1.count - wk2.count)
+            }
+            if ( !(wk1) && (wk2) ) return(wk2.count)
+            if ( (wk1) && !(wk2) ) return(wk1.count)
+            return(0)
+        })
+
+        //
         if ( merge_categories_proc ) {
             setImmediate(() => {
-                merge_categories_proc.spawn_reduction(this._word_list,(reduction) => {
+                merge_categories_proc.spawn_reduction(tabs,this._word_list,this._topic_dims,(reduction) => {
                     if ( reduction && reduction._word_list &&  reduction._all_topics && reduction._topics ) {
                         this._word_list = reduction._word_list
                         this._all_topics = reduction._all_topics
@@ -448,11 +550,16 @@ app.post('/get_topics',(req, res) => {
     let body = req.body;
 
     let email = body.email
-
-    console.log("getting topics: " + email)
+    let cluster_points = (body.c_points !== undefined) ? body.c_points : false
+    
 
     let user_keeper = g_active_user_map[email]
     if ( user_keeper ) {
+        if ( cluster_points ) {
+            //
+            user_keeper.set_prefered_dimensions(cluster_points)
+            //
+        }
         let topic_list = user_keeper.get_topics()
         return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true', 'data' : topic_list })));
     }
@@ -466,8 +573,6 @@ app.post('/get_topics',(req, res) => {
     let body = req.body;
 
     let email = body.email
-
-console.log("getting domains: " + email)
 
     let user_keeper = g_active_user_map[email]
     if ( user_keeper ) {

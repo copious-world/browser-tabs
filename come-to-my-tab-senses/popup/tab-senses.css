@@ -28,6 +28,14 @@ button {
   color:#11531f
 }
 
+.cluster {
+  background-color: #11531f;
+  color: white;
+}
+.cluster:hover {
+  background-color: #cfeeee;
+  color:#11531f
+}
 
 .saver {
   background-color: #E5F2F2;
@@ -84,6 +92,14 @@ button {
 .help_getter:hover {
   background-color: #EAEA9D;
   color:#064614;
+}
+
+.counter_box {
+  margin-left: 4px;
+  margin-right: 4px;
+  padding: 2px;
+  color: rgb(39, 33, 73);
+  font-size: 75%;
 }
 
 

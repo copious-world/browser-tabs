@@ -47,6 +47,7 @@
   <div class="tab">
     <button id="pick-gathered_tabs" class="tablinks active" >Gathered</button>
     <button id="pick-requested_topics" class="tablinks" >Topics</button>
+    <button id="pick-requested_clusters" class="tablinks" >Clustering</button>
     <button id="pick-requested_domains" class="tablinks" >Domains</button>
     <button id="pick-window_gathered" class="tablinks" >This Window Tabs</button>
     <button id="pick-requested_windows" class="tablinks" >Windows</button>
@@ -63,11 +64,37 @@
 
   <div id="requested_topics" class="tabcontent" >
     <h4>List of Stored Topics</h4> 
-    <div style="max-width: 300px">Click on <b>Retrieve Tabs</b> to see all of the topics found in the tabs that you previously saved.</div>
+    <div style="max-width: 300px">Click on <b>Retrieve Topics</b> to see all of the topics found in the tabs that you previously saved. 
+      Results will be sorted by how many tabs they attract.</div>
     <ul id="topic_list">
         
     </ul>
   </div>
+
+  <div id="requested_clusters" class="tabcontent" >
+    <h4>List of Stored Topics</h4> 
+    <div style="max-width: 300px">Enter up to five key words that you think will attract more tabs. Then, click 
+      <button class="cluster" >cluster</button>
+      to update your topics</div>
+    <ol id="user_clusters">
+        <li>
+          <input id="uc_1" type="text" value = "" />
+        </li>
+        <li>
+          <input id="uc_2" type="text" value = "" />
+        </li>
+        <li>
+          <input id="uc_3" type="text" value = "" />
+        </li>
+        <li>
+          <input id="uc_4" type="text" value = "" />
+        </li>
+        <li>
+          <input id="uc_5" type="text" value = "" />
+        </li>
+      </ol>
+  </div>
+
 
   <div id="requested_domains" class="tabcontent" >
     <h4>List of Stored Topics</h4> 

@@ -94,23 +94,6 @@ button {
   color:#064614;
 }
 
-.do_clear {
-  color:#064614;
-}
-.do_clear:hover {
-  background-color: #EAEA9D;
-  color:#064614;
-}
-
-.do_undo {
-  color:#064614;
-}
-.do_undo:hover {
-  background-color: #EAEA9D;
-  color:#064614;
-}
-
-
 .counter_box {
   margin-left: 4px;
   margin-right: 4px;

@@ -141,38 +141,6 @@ function tab_gather(tabs,tabs_stored,list_loc) {
 }
 
 
-// ---- ---- ---- ---- ---- ---- ----
-//
-async function do_op(op) {
-  try {
-    let email_in = document.getElementById('uemail')
-    if ( email_in ) {
-        let email = email_in.value
-        if ( email.length ) {
-            let postable = {
-                "email" : email,
-                "op" : op
-            }
-            try {
-              let response = await postData(SERVER_TOPIC_TABS_POST + topic,postable)
-              if ( response.OK === "true" ) {
-                return
-              }
-            } catch (e) {
-              alert(e)
-            }
-            return
-        } else {
-            alert("your account email is required")
-        }
-    }
-  } catch(e) {
-      alert(e)
-  }
-}
-
-
-
 function gather_tabs() {
   return new Promise ((resolve,reject) => {
     browser.tabs.query({})
@@ -447,6 +415,37 @@ async function fetch_topic(topic,without_filter) {
 
 // ---- ---- ---- ---- ---- ---- ----
 //
+async function do_op(op) {
+  try {
+    let email_in = document.getElementById('uemail')
+    if ( email_in ) {
+        let email = email_in.value
+        if ( email.length ) {
+            let postable = {
+                "email" : email,
+                "op" : op
+            }
+            try {
+              let response = await postData(SERVER_TOPIC_TABS_POST + topic,postable)
+              if ( response.OK === "true" ) {
+                return
+              }
+            } catch (e) {
+              alert(e)
+            }
+            return
+        } else {
+            alert("your account email is required")
+        }
+    }
+  } catch(e) {
+      alert(e)
+  }
+}
+
+
+// ---- ---- ---- ---- ---- ---- ----
+//
 async function fetch_topic_link_package(topic,click_context) {
   try {
     let email_in = document.getElementById('uemail')
@@ -567,6 +566,7 @@ function listenForClicks() {
       } else if ( e.target.classList.contains("undo") ) {
         do_op("undo")
       }
+      //
     } catch (err) {
         
     }
@@ -613,8 +613,6 @@ function hide_help() {
 //
 function initialize_dashboard() {
   //
-  console.log("initiaize")
-
   initialize_db()
 
   g_application_mail = false
@@ -635,7 +633,6 @@ function initialize_dashboard() {
     }).catch(reportError);
   }
   //
-  console.log("initiaize")
   browser.tabs.query({active: true, currentWindow: true}).then(initializer)
   .catch(reportError);
   //
@@ -693,7 +690,6 @@ function delete_everything() {
 
 function load_previous(email) {
   if ( email !== false  ) {
-    console.log("sending message")
     browser.runtime.sendMessage({
       "command": 'get',
       "email": email
@@ -756,8 +752,6 @@ function initialize_db() {
   browser.runtime.sendMessage({
     "command": 'db-initial'
   })
-
-  console.log("db initialize called")
 }
 
 /**

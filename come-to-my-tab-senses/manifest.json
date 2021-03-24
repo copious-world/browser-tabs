@@ -31,14 +31,15 @@
 
   "background": {
     "scripts": [
-        "./background.js"
+      "./background.js"
     ]
   },
 
   "content_scripts": [
     {
       "matches": [ "*://*.copious.world/*/dashboard.html",  "*://*.popsongnow.com/*/dashboard.html",
-         "file:///Users/richardleddy/Documents/GitHub/copious-transitions/sites/copious/dashboard.html" ],
+          "file:///Users/richardleddy/Documents/GitHub/copious-transitions/sites/copious/dashboard.html",
+          "file:///Users/richardalbertleddy/Documents/GitHub/copious-transitions/sites/copious/dashboard.html" ],
       "js": ["tab-catcher.js"]
     }
   ]

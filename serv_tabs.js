@@ -4,9 +4,7 @@ const express = require('express')
 
 //
 const cors =  require('cors')
-
-
-
+//
 const merge_categories_proc = require('./tabs_dimension_reducer')
 
 
@@ -163,8 +161,10 @@ class WordKeeper {
 
     //
     add_word(url,title) {
-        this._count++
-        this._url_list[url] = title
+        if ( this._url_list[url] === undefined ) {
+            this._count++
+            this._url_list[url] = title    
+        }
     }
 
     clear() {
@@ -173,7 +173,7 @@ class WordKeeper {
 }
 
 
-
+const UNDO_STACK_LIMIT = 7
 
 // UserKeeper_tabs
 ////  provides management of lists by user email....
@@ -184,6 +184,11 @@ class UserKeeper_tabs {
     // // // // // // // // 
     constructor(email) {
         this.email = email
+        this.init_empties()
+    }
+
+    //
+    init_empties() {
         this._word_list = {}
         this._topics = []
         this._topic_dims = []
@@ -191,12 +196,41 @@ class UserKeeper_tabs {
         this._windows = []
         this._all_domains = {}
         this._all_topics = {}
-        //
+    }
+
+    //
+    clear() {   // wipe out everything... but save state for some limited number of clears.
+        let prev_stack = Object.assign({},this)
+        delete prev_stack._undo_stack
+        this._undo_stack.unshift(prev_stack)
+        if ( this._undo_stack.length > UNDO_STACK_LIMIT ) {
+            this._undo_stack.pop()
+        }
+        this.init_empties()
+    }
+
+    //
+    undo() {
+        if ( this._undo_stack.length > 0 ) {
+            let old_stack = this._undo_stack.shift()
+            this._word_list = old_stack._word_list
+            this._topics = old_stack._topics
+            this._topic_dims = old_stack._topic_dims
+            this._domains = old_stack._domains
+            this._windows = old_stack._windows
+            this._all_domains = old_stack._all_domains
+            this._all_topics = old_stack._all_topics
+    
+        }
     }
 
 
     set_prefered_dimensions(cluster_points) {
         this._topic_dims = cluster_points
+    }
+
+    set_topic_dims(t_dims) {
+        this._topic_dims = t_dims
     }
 
     // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
@@ -279,7 +313,7 @@ class UserKeeper_tabs {
                                 if ( w_keeper._count === 1 ) {
                                     removals.push(w_keeper)
                                 } else {
-                                    this._word_list.push(word)
+                                    w_list.push(word)
                                     break
                                 }    
                             }
@@ -306,6 +340,17 @@ class UserKeeper_tabs {
         //
         let urls_to_words = {} 
         //
+        let do_topics = false
+        if ( this._topic_dims.length ) {
+            do_topics = true
+            for ( let topic of this._topic_dims ) {
+                let word_keeper = this._word_list[topic]
+                if ( word_keeper == undefined ) {
+                    word_keeper = new WordKeeper(topic)
+                    this._word_list[topic] = word_keeper
+                }
+            }
+        }
         //
         tabs.forEach(tab => {
             let {url, title} = tab
@@ -324,6 +369,16 @@ class UserKeeper_tabs {
                     urls_to_words[url] = []
                 }
                 urls_to_words[url].push(word)
+                if ( do_topics ) {
+                    for ( let topic of this._topic_dims ) {
+                        if ( topic !== word ) {
+                            if ( word.indexOf(topic) ) {
+                                let topic_keeper = this._word_list[topic]
+                                topic_keeper.add_word(url,title)
+                            }
+                        }
+                    }
+                }
             }
         })
         //
@@ -333,6 +388,8 @@ class UserKeeper_tabs {
         for ( let word in this._word_list ) {
             let word_keeper = this._word_list[word]
             this._all_topics[word] = Object.keys(word_keeper._url_list)
+            //
+            //
             this._topics.push({
                 "link" : `/${word}`,      // leading slash is added 
                 "descr" : word,
@@ -341,8 +398,23 @@ class UserKeeper_tabs {
         }
         //
         this._topics.sort((t1,t2) => {
-            let wk1 = this._word_list[t1.descr]
-            let wk2 = this._word_list[t2.descr]
+            let w_t1 = t1.descr
+            let w_t2 = t2.descr
+            if ( do_topics ) {
+                let t1_weight = 0
+                let t2_weight = 0
+                if ( this._topic_dims.indexOf(w_t1) ) {
+                    t1_weight = 600000
+                }
+                if ( this._topic_dims.indexOf(w_t2) ) {
+                    t2_weight = 600000
+                }
+                if ( (t1_weight !== 0) && (t2_weight !== 0) ) {
+                    return(t1_weight - t2_weight)
+                }
+            }
+            let wk1 = this._word_list[w_t1]
+            let wk2 = this._word_list[w_t2]
             if ( wk1 && wk2 ) {
                 return(wk1.count - wk2.count)
             }
@@ -350,7 +422,6 @@ class UserKeeper_tabs {
             if ( (wk1) && !(wk2) ) return(wk1.count)
             return(0)
         })
-
         //
         if ( merge_categories_proc ) {
             setImmediate(() => {
@@ -363,7 +434,6 @@ class UserKeeper_tabs {
                 })    
             })
         }
-
     }
 
     // ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -476,7 +546,7 @@ class UserKeeper_tabs {
 
 
 function dump_topcis_and_domains() {
-    let all_data = JSON.stringify(g_active_user_map)
+    let all_data = JSON.stringify(g_active_user_map,false,2)
     fs.writeFileSync("salvage_run.json",all_data)
 }
 
@@ -493,20 +563,31 @@ app.post('/put_tabs',(req, res) => {
     //
     let body = req.body;
     //
-    if ( (body.tabs === undefined) || (body.email === undefined) ) {
-        return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'false' })));
-    } else {
-        let user_keeper = g_active_user_map[body.email]
-        if ( user_keeper === undefined ) {
-            user_keeper = new UserKeeper_tabs(body.email)
-            g_active_user_map[body.email] = user_keeper
-        }
-        // there is one now,, but check 
-        if ( user_keeper ) {
-            user_keeper.injest(body.tabs)
-        } else {
+    try {
+        if ( (body.tabs === undefined) || (body.email === undefined) ) {
             return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'false' })));
-        }
+        } else {
+            //
+            let user_keeper = g_active_user_map[body.email]
+            if ( user_keeper === undefined ) {
+                user_keeper = new UserKeeper_tabs(body.email)
+                g_active_user_map[body.email] = user_keeper
+            }
+            // there is one now,, but check 
+            if ( user_keeper ) {
+                //
+                if ( body.c_points !== undefined ) {
+                    user_keeper.set_topic_dims(body.c_points)
+                    console.dir(body.c_points)
+                }
+    
+                user_keeper.injest(body.tabs)
+            } else {
+                return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'false' })));
+            }
+        }    
+    } catch (e) {
+        console.error(e)
     }
     //
     return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true' })));
@@ -582,6 +663,38 @@ app.post('/get_topics',(req, res) => {
     return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true', 'data' : g_topic_list })));
     //
   })
+
+
+
+  app.post('/clear',(req, res) => {
+    //
+    let body = req.body;
+    let email = body.email
+
+    let user_keeper = g_active_user_map[email]
+    if ( user_keeper ) {
+        user_keeper.clear()
+        return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true' })));
+    }
+    return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true' })));
+    //
+  })
+
+
+  app.post('/undo',(req, res) => {
+    //
+    let body = req.body;
+    let email = body.email
+
+    let user_keeper = g_active_user_map[email]
+    if ( user_keeper ) {
+        user_keeper.undo()
+        return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true' })));
+    }
+    return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true' })));
+    //
+  })
+
 
 // GET THE TABS FOR A PARTICULAR TOPIC
 //

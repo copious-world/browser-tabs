@@ -43,9 +43,9 @@ class TabsTopicReducer {
             })
         }
         //
-        this._topics.sort((t1,t2) => {          /// sort... 
-            let wk1 = this._word_list[t1.descr]
-            let wk2 = this._word_list[t2.descr]
+        topics.sort((t1,t2) => {          /// sort... 
+            let wk1 = word_list[t1.descr]
+            let wk2 = word_list[t2.descr]
             if ( wk1 && wk2 ) {
                 return(wk1.count - wk2.count)
             }

@@ -68,7 +68,7 @@
     browser.runtime.onMessage.addListener((message) => {
       if ( message === undefined ) return
       if ( message.command === undefined ) return
-  
+
         //
       console.log("tab-catcher " + message.command)
       if ( message.command === "topics" ) {
@@ -83,6 +83,5 @@
       }
     });
 
-  
   })();
   

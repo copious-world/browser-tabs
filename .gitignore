@@ -3,3 +3,4 @@ webextensions-examples
 public/*.min.js
 *.json
 webextension-polyfill-0.7.0
+.DS_Store

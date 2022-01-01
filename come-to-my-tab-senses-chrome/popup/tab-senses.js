@@ -11,6 +11,7 @@ const SERVER_WINDOW_UNDO =  "http://localhost:3111/undo"
 
 
 const DEFAULT_CLICK_CONTEXT = "domains"
+const DEBUGGING = true
 
 let g_application_mail = false
 
@@ -76,6 +77,13 @@ function reportError(error) {
   console.error(`Could not come to my tab senses: ${error}`);
 }
 
+
+function debug(msg) {
+  let help_field = document.getElementById("help_display")
+  if ( help_field ) {
+    help_field.innerHTML += '<br>' + msg
+  }
+}
 
 
 
@@ -143,7 +151,7 @@ function tab_gather(tabs,tabs_stored,list_loc) {
 
 function gather_tabs() {
   return new Promise ((resolve,reject) => {
-    browser.tabs.query({})
+    chrome.tabs.query({})
     .then((tabs) => { tab_gather(tabs,'all_tabs','tab_list'); resolve(true); })
     .catch(
       (err) => { reportError(err); reject(err) }
@@ -154,7 +162,7 @@ function gather_tabs() {
 
 function gather_window_tabs() {
   return new Promise ((resolve,reject) => {
-    browser.tabs.query({ 'currentWindow': true })
+    chrome.tabs.query({ 'currentWindow': true })
     .then((tabs) => { tab_gather(tabs,'window_tabs','window_tab_list'); resolve(true); })
     .catch(
       (err) => { reportError(err); reject(err) }
@@ -181,6 +189,7 @@ function logTopic(topic_tables,topics,without_filter,click_context) {
     //
     let element = document.createElement('li')
     let btn = document.createElement('button')
+    //
     btn.addEventListener('click',((tf) => {
         return((ev) => {
           fetch_topic(tf,without_filter)              // FETCH TOPIC fetch_topic, From a link to the server
@@ -258,9 +267,10 @@ async function retrieve_tab_topics(post_channel,result_location,without_filter,c
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 //
 function spawn_if_new_tabs(tabs,data) {
-  for ( let url of data ) {
+  //debug(`spawn_if_new_tabs  : ${ data.links } ${typeof data.links }`)
+  for ( let url of data.links ) {
     if ( tabs.find((atab) => { return(atab.url === url) }) === undefined ) {
-      browser.tabs.create({
+      chrome.tabs.create({
         "url": url
       });
     }
@@ -268,15 +278,17 @@ function spawn_if_new_tabs(tabs,data) {
 }
 
 
-function spawn_tabs(data,without_filter) {
+function spawn_tabs(search_result,without_filter) {
+  let data = JSON.parse(search_result.result)
   if ( without_filter ) {
-    for ( let url of data ) {   // create tabs and don't check to see if it is there
-      browser.tabs.create({
+debug(`spawn_tabs NO filtered: ${ data.links } ${typeof data.links}`)
+    for ( let url of data.links ) {   // create tabs and don't check to see if it is there
+      chrome.tabs.create({
         "url": url
       });
     }
   } else {
-    browser.tabs.query({})     // query current tabs and lonly open ones not currenly open.
+    chrome.tabs.query({})     // query current tabs and only open ones not currenly open.
       .then((tabs) => { spawn_if_new_tabs(tabs,data) })
       .catch(reportError);
   }
@@ -363,7 +375,7 @@ let cluster_points = get_cluster_point_list()
 
 
 async function save_window() {
-  browser.tabs.query({ 'currentWindow': true })
+  chrome.tabs.query({ 'currentWindow': true })
       .then((tabs) => {
         tab_gather(tabs,'window_tabs','window_tab_list')
         tab_field_saver('window_tab_list',SERVER_PUT_WINDOW)
@@ -587,7 +599,9 @@ function reportExecuteScriptError(error) {
 // ---- ---- ---- ---- ---- ---- ----
 //
 async function show_help() {
-  let help_url = browser.runtime.getURL("docs/help.html");
+  if ( DEBUGGING ) return
+  //
+  let help_url = chrome.runtime.getURL("docs/help.html");
   let options = {
     method: 'GET', // *GET, POST, PUT, DELETE, etc.
   }
@@ -603,38 +617,42 @@ async function show_help() {
 // ---- ---- ---- ---- ---- ---- ----
 //
 function hide_help() {
+  if ( DEBUGGING ) return
+  //
   let help_field = document.getElementById("help_display")
   if ( help_field ) {
-    help_field.innerHTML = ""
+    //help_field.innerHTML = ""
   }
 }
 
 // ---- ---- ---- ---- ---- ---- ----
 //
-function initialize_dashboard() {
+async function initialize_dashboard() {
   //
   initialize_db()
 
   g_application_mail = false
   //
-  let initializer = (tabs) => {
-    browser.tabs.sendMessage( tabs[0].id, { "command" : "initial" })
-    .then( response => {
-        g_application_mail = false  // reset 
-        //
-        let mail = response.user_email
-        if ( mail && mail.length ) {
-          g_application_mail = mail
-          let user_mail = document.getElementById('uemail')
-          user_mail.value = mail
-          load_previous(g_application_mail)
-        }
-        //
-    }).catch(reportError);
+  try {
+    let queryOptions = { active: true, currentWindow: true };
+    let tabs = await chrome.tabs.query(queryOptions);
+    let response = await chrome.tabs.sendMessage( tabs[0].id, { "command" : "initial" })
+    if ( response ) {
+      g_application_mail = false  // reset 
+      //
+      let mail = response.user_email
+      if ( mail && mail.length ) {
+        g_application_mail = mail
+        let user_mail = document.getElementById('uemail')
+        user_mail.value = mail
+        load_previous(g_application_mail)
+      }
+      //
+    }
+    //initializer(tabs)
+  } catch (e) {
+    reportError(e)
   }
-  //
-  browser.tabs.query({active: true, currentWindow: true}).then(initializer)
-  .catch(reportError);
   //
 }
 
@@ -643,13 +661,14 @@ function initialize_dashboard() {
 //
 function inject_topic_into_dashboard(package_name,link_package) {
   let send_topics = (tabs) => {
-    browser.tabs.sendMessage(
+    console.log(link_package)
+    chrome.tabs.sendMessage(
       tabs[0].id,
       { "command" : "topics", "topics_or_domains" : link_package, "package_name" : package_name  }
     ).catch(reportError);
   }
   if ( g_application_mail && g_application_mail.length ) {
-    browser.tabs.query({active: true, currentWindow: true}).then(send_topics)
+    chrome.tabs.query({active: true, currentWindow: true}).then(send_topics)
     .catch(reportError);  
   }
 }
@@ -672,14 +691,14 @@ function save_everything() {
     }
     console.log("save_everything::  " + data_to_save)
     //
-    browser.runtime.sendMessage(storage_record)
+    chrome.runtime.sendMessage(storage_record)
   }
 }
   
 function delete_everything() {
   let email = g_application_mail
   if ( email ) {
-    browser.runtime.sendMessage({
+    chrome.runtime.sendMessage({
         "command": 'delete',
         "email": email
     })
@@ -690,7 +709,7 @@ function delete_everything() {
 
 function load_previous(email) {
   if ( email !== false  ) {
-    browser.runtime.sendMessage({
+    chrome.runtime.sendMessage({
       "command": 'get',
       "email": email
     }).then( response => {
@@ -749,7 +768,7 @@ function load_previous(email) {
 }
 
 function initialize_db() {
-  browser.runtime.sendMessage({
+  chrome.runtime.sendMessage({
     "command": 'db-initial'
   })
 }

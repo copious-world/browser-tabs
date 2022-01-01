@@ -4,7 +4,7 @@ var g_tabs_db = null;
 
 function create_database() {
 
-    const request = window.indexedDB.open('tab-senses-db', 4);
+    const request = self.indexedDB.open('tab-senses-db', 4);
     
     request.onerror = (event) => {
         console.log("Problem opening DB.");
@@ -150,7 +150,7 @@ function delete_record(email) {
  * Listen for messages from the background script.
  * Call "add_link_packge_from_extension()" 
 */
-browser.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message) => {
 
     if ( message === undefined ) return
     if ( message.command === undefined ) return
@@ -170,7 +170,7 @@ browser.runtime.onMessage.addListener((message) => {
         */
         case "update" : {
             let user_tabs = message.user_tabs
-            update_record(user_tabs)    // includes email and a stringify of all the data 
+            return update_record(user_tabs)    // includes email and a stringify of all the data 
             break
         }
         case "get" : {
@@ -179,7 +179,7 @@ browser.runtime.onMessage.addListener((message) => {
         }
         case "delete" : {
             let email = message.email
-            delete_record(email)
+            return delete_record(email)
             break
         }
         default : {
@@ -187,6 +187,7 @@ browser.runtime.onMessage.addListener((message) => {
         }
     }
     //
+    return false
 })
 
 

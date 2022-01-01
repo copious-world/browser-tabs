@@ -1,4 +1,5 @@
 const fs = require('fs')
+const fsPromise = require('fs/promises')
 const path = require('path')
 const express = require('express')
 
@@ -127,7 +128,8 @@ function unpack_domain(aurl) {
     }
 }
 
-
+// link_package_from
+//
 function link_package_from(topic_list,topic,email) {
     //
     let link_package = {
@@ -135,13 +137,15 @@ function link_package_from(topic_list,topic,email) {
         "email" : email,
         "title" : topic,
         "subject" : topic,
+        "keys" : [],
+        "presentation" : "*:any",
         "txt_full" : "Add a description (abstract) telling about these links",
         "links" : topic_list
     }
     //
     let res = {
         "blog_type" : "link_package",
-        "result" : JSON.stringify(link_package),
+        "package" : JSON.stringify(link_package),
         "file_name"   : 'topic-' + topic
     }
     //
@@ -197,6 +201,18 @@ class UserKeeper_tabs {
         this._all_domains = {}
         this._all_topics = {}
     }
+
+    //
+    load_table(table) {
+        this._word_list = table._word_list
+        this._topics = table._topics
+        this._topic_dims = table._topic_dims
+        this._domains = table._domains
+        this._windows = table._windows
+        this._all_domains = table._all_domains
+        this._all_topics = table._all_topics
+    }
+
 
     //
     clear() {   // wipe out everything... but save state for some limited number of clears.
@@ -549,6 +565,35 @@ function dump_topcis_and_domains() {
     let all_data = JSON.stringify(g_active_user_map,false,2)
     fs.writeFileSync("salvage_run.json",all_data)
 }
+
+
+
+function init_transform_user_map(user_map) {
+    for ( let u_email in user_map ) {
+        let ukeep = new UserKeeper_tabs(u_email)
+        g_active_user_map[u_email] = ukeep
+        ukeep.load_table(user_map[u_email])
+    }
+    // g_active_user_map[body.email] = new UserKeeper_tabs(body.email)
+
+//console.dir(user_map)
+}
+
+
+async function load_topics_and_domains() {
+    try {
+        let jdata = await fsPromise.readFile("salvage_run.json")
+        jdata = jdata.toString()
+        let user_map = JSON.parse(jdata);
+        init_transform_user_map(user_map)
+    } catch (e) {
+        console.log(`failed to load salvage_run.json`)
+    }
+}
+
+
+load_topics_and_domains()
+
 
 
 

@@ -65,7 +65,7 @@
      * Listen for messages from the background script.
      * Call "add_link_packge_from_extension()" 
     */
-    browser.runtime.onMessage.addListener((message) => {
+    chrome.runtime.onMessage.addListener((message) => {
       if ( message === undefined ) return
       if ( message.command === undefined ) return
 

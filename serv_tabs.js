@@ -133,14 +133,15 @@ function unpack_domain(aurl) {
 function link_package_from(topic_list,topic,email) {
     //
     let link_package = {
-        "owner" : email,
+        "creator" : email,
         "email" : email,
         "title" : topic,
         "subject" : topic,
         "keys" : [],
-        "presentation" : "*:any",
         "txt_full" : "Add a description (abstract) telling about these links",
-        "links" : topic_list
+        "presentation" : "*:any",
+        "links" : topic_list,
+        "link_map" : {}       /// link to term
     }
     //
     let res = {

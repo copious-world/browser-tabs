@@ -5,6 +5,10 @@ const express = require('express')
 const Link_package = require('link-package')
 
 //
+// // https://en.wikipedia.org/wiki/Locality-sensitive_hashing
+
+
+//
 const cors =  require('cors')
 //
 const merge_categories_proc = require('./tabs_dimension_reducer')
@@ -134,18 +138,14 @@ function unpack_domain(aurl) {
 function link_package_from(topic_list,topic,email) {
     //
     let l_package = new Link_package()
-
-    l_package.creator = email
-    l_package.email = email
-    l_package.title = topic
-    l_package.subject = topic
-    l_package.txt_full = "Add a description (abstract) telling about these links"
-
-    l_package.presentation = "*:any",
-    l_package.links = topic_list
-    //.link_map = {}
-    //.reverse_link_map = {}
-
+    l_package.set_all("*:any",topic_list,{},{})
+    l_package.set_from_map({
+        'creator' : email,
+        'email' : email,
+        'title' : topic,
+        'subject' : topic,
+        'txt_full' : "Add a description (abstract) telling about these links"
+    })
     //
     let res = {
         "blog_type" : "link_package",
@@ -606,6 +606,46 @@ app.get('/', (req, res) => {
   res.send('Hello You have encountered the copious.world tab server.... open to the public...')
 })
 
+// 
+app.get('/dashboard/:id_token', async (req, res) => {
+    let id_token = req.params['id_token']
+//
+console.log(id_token)
+console.log(Object.keys(g_active_user_map))
+    //
+    if ( g_active_user_map[id_token] !== undefined ) {
+        try {
+            let hdata = await fsPromise.readFile("./dashboard/user_tab_manager.html")
+            hdata = hdata.toString()
+            hdata = hdata.replace("$$USE_IDENTIFIER",id_token)
+            hdata = hdata.replace("$$USE_IDENTIFIER",id_token)
+            res.send(hdata)
+        } catch (e) {
+            console.log(`failed to load salvage_run.json`)
+        }
+    } else {
+        res.send('Hello You have encountered the copious.world tab server.... open to the public...')
+    }
+
+})
+
+app.get('/dashboard/css/:id_token/:nothing', async (req, res) => {
+    let id_token = req.params['id_token']
+    if ( g_active_user_map[id_token] !== undefined ) {
+        try {
+            let hdata = await fsPromise.readFile("./dashboard/tab-senses.css")
+            res.send(hdata)
+        } catch (e) {
+            console.log(`failed to load salvage_run.json`)
+        }
+    } else {
+        res.send('Hello You have encountered the copious.world tab server.... open to the public...')
+    }
+})
+  
+
+
+  
 
 // PUT ALL TABS .... --- INJEST
 app.post('/put_tabs',(req, res) => {

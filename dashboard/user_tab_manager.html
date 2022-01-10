@@ -2,14 +2,202 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="tab-senses.css"/>
   </head>
-  <script type="application/javascript" src="browser-polyfill.min.js"></script>
+<style>
+html, body {
+  width: 100%;
+  min-width: 300px;
+}
+
+.hidden {
+  display: none;
+}
+
+.button {
+  margin: 3% auto;
+  padding: 4px;
+  text-align: center;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+
+button {
+  cursor: pointer;
+}
+
+.gather {
+  background-color: #11531f;
+  color: white;
+}
+.gather:hover {
+  background-color: #cfeeee;
+  color:#11531f
+}
+
+.cluster {
+  background-color: #11531f;
+  color: white;
+}
+.cluster:hover {
+  background-color: #cfeeee;
+  color:#11531f
+}
+
+.saver {
+  background-color: #E5F2F2;
+}
+.saver:hover {
+  background-color: #BFF2F2;
+}
+
+
+.getter {
+  background-color: #FBFBC9;
+}
+.getter:hover {
+  background-color: #DAEA9D;
+}
+
+.dgetter {
+  background-color: #FBFBC9;
+}
+.dgetter:hover {
+  background-color: #EAEA9D;
+}
+
+
+.wgather {
+  background-color: #11531f;
+  color: white;
+}
+.wgather:hover {
+  background-color: #cfeeee;
+  color:#11531f
+}
+
+
+.wsaver {
+  background-color: #E5F2F2;
+}
+.wsaver:hover {
+  background-color: #BFF2F2;
+}
+
+
+.wgetter {
+  background-color: #FBFBC9;
+}
+.wgetter:hover {
+  background-color: #EAEA9D;
+}
+
+
+.dashboard_getter {
+  background-color: #FBFBC9;
+  color:#064614;
+}
+.dashboard_getter:hover {
+  background-color: #f0e19e;
+  color:#053a10;
+}
+
+
+.help_getter {
+  background-color: #FBFBC9;
+  color:#064614;
+}
+.help_getter:hover {
+  background-color: #EAEA9D;
+  color:#064614;
+}
+
+.do_clear {
+  color:#064614;
+}
+.do_clear:hover {
+  background-color: #EAEA9D;
+  color:#064614;
+}
+
+.do_undo {
+  color:#064614;
+}
+.do_undo:hover {
+  background-color: #EAEA9D;
+  color:#064614;
+}
+
+
+.counter_box {
+  margin-left: 4px;
+  margin-right: 4px;
+  padding: 2px;
+  color: rgb(39, 33, 73);
+  font-size: 75%;
+}
+
+
+ /* Style the tab */
+ .tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+} 
+
+.PhIOtjDr_0 {
+  fill:none;
+  stroke:#1c1448;
+  stroke-width:4.59875107;
+  stroke-miterlimit:4;
+  stroke-dasharray: 2948 2950;
+  stroke-dashoffset: 2949;
+  animation: PhIOtjDr_draw 6666ms ease-in forwards;
+}
+
+@keyframes PhIOtjDr_draw {
+  100% {stroke-dashoffset: 0}
+}
+
+@keyframes PhIOtjDr_fade {
+  0% {stroke-opacity: 1}
+  97.1830985915493% {stroke-opacity: 1}
+  100% {stroke-opacity: 0}
+}
+
+</style>
 <body>
   <div id="popup-content">
     <div style="background-color: blanchedalmond;padding: 4px;border: 1px solid rgb(82, 9, 82)">
-      <div style="width:100%;height:38px;display:inline-block;vertical-align: middle;padding-bottom: 6px;">
-        <div style="width:38px;height:38px;display:inline-block">
+      <div style="width:38;height:38;display:inline-block">
         <a class="nav-link" href="http://www.copious.world" target="COPIOUS">
             <svg version="1.0" width="38" height="38" viewBox="0 0 250 250" preserveAspectRatio="xMidYMid meet" id="logo" >
               <defs id="defs10"/>
@@ -21,21 +209,16 @@
               <text xml:space="preserve" style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:28.53204727px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" x="90" y="175.07523" id="text4165" transform="scale(0.90874022,1.1004245)"><tspan id="tspan4167" x="90" y="175.07523">opious</tspan></text>
             </svg>
         </a>
-        </div>
-        <div style="float:right;margin-right: 5%;">
-        <button class="help_getter" style="font-weight: bolder;font-size: larger;box-shadow: lightgoldenrodyellow;border-radius: 50%;">?</button>
-        <a id="dashlink" href="http://localhost:3111/dashboard/pad@fad.com" class="dashboard_getter" style="font-weight: bolder;font-size: larger;box-shadow: lightgoldenrodyellow;" target="COPIOUS-TABS-DASH">dashboard</a>
-        </div>
       </div>
-
-      <div style="height:38px;display:inline-block">
+      <div style="height:38;display:inline-block">
         <button class="gather" >Gather Tabs</button>
         <button class="saver" >Save Tabs</button>
-        <button class="getter" >Retrieve Topics</button>
+        <button class="getter" >Retrieve Topics</button>        
         <button class="dgetter" >Retrieve Domains</button>        
       </div>
       <div style="background-color: blanchedalmond;padding: 4px;border: 1px solid rgb(82, 9, 82)">
-        <div style="height:38px;display:inline-block">
+        <div style="height:38;display:inline-block">
+          <button class="help_getter" style="background-color:rgb(245, 255, 236);font-weight: bolder;font-size: larger;box-shadow: lightgoldenrodyellow;border-radius: 50%;">?</button>
           <button class="wgather" >Gather Window Tabs</button>
           <button class="wsaver" >Save Window</button>
           <button class="wgetter" >Retrieve Windows</button>
@@ -45,7 +228,7 @@
       <input id="window_tabs" type="hidden" value="" >
     </div>
     <div style="background-color: rgb(250, 224, 186);padding: 4px;border: 1px solid rgb(9, 32, 82)" >
-        <label>Enter your email for fetching or saving:</label> <input type="email" name="uemail" id="uemail" value=""   />
+        <label>Enter your email for fetching or saving:</label> <input type="email" name="uemail" id="uemail" value="$$USE_IDENTIFIER" />
     </div>
   </div>
 
@@ -133,11 +316,12 @@
     </div>
   </div>
  
+ 
 
   <div id="error-content" class="hidden">
     <p>Can't access the tab-senses tool from this web page.</p><p>Try a different page.</p>
   </div>
-  <script src="tab-senses.js"></script>
+
 </body>
 
 </html>

@@ -26,7 +26,7 @@
           "category" : "links",
           "message": msg
         }, g_current_dashboard_host);
-      }
+    }
   
     /**
      * Given a list of tabs, turn them into a link 

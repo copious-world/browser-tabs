@@ -781,3 +781,24 @@ function initialize_db() {
 listenForClicks()
 initialize_dashboard()
 
+function setup_key_event() {
+  document.addEventListener("change",(ev) => {
+    update_dash_link(ev)
+  })
+}
+
+function update_dash_link(ev) {
+  let email_src = ev.target
+  if ( email_src && (email_src.id === "uemail") ) {
+    let email = email_src.value
+    //alert(email_src.id + " " + email)
+    if ( email && email.length ) {
+      let dash_link = document.getElementById("dashlink")
+      if ( dash_link ) {
+        dash_link.href = `http://localhost:3111/dashboard/${email}`
+      }
+    }
+  }
+}
+
+setup_key_event() 

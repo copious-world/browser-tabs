@@ -2,6 +2,7 @@ const fs = require('fs')
 const fsPromise = require('fs/promises')
 const path = require('path')
 const express = require('express')
+const Link_package = require('link-package')
 
 //
 const cors =  require('cors')
@@ -132,21 +133,23 @@ function unpack_domain(aurl) {
 //
 function link_package_from(topic_list,topic,email) {
     //
-    let link_package = {
-        "creator" : email,
-        "email" : email,
-        "title" : topic,
-        "subject" : topic,
-        "keys" : [],
-        "txt_full" : "Add a description (abstract) telling about these links",
-        "presentation" : "*:any",
-        "links" : topic_list,
-        "link_map" : {}       /// link to term
-    }
+    let l_package = new Link_package()
+
+    l_package.creator = email
+    l_package.email = email
+    l_package.title = topic
+    l_package.subject = topic
+    l_package.txt_full = "Add a description (abstract) telling about these links"
+
+    l_package.presentation = "*:any",
+    l_package.links = topic_list
+    //.link_map = {}
+    //.reverse_link_map = {}
+
     //
     let res = {
         "blog_type" : "link_package",
-        "package" : JSON.stringify(link_package),
+        "package" : JSON.stringify(l_package),
         "file_name"   : 'topic-' + topic
     }
     //

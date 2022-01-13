@@ -27,7 +27,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "html-to-text": "^7.0.0",
-    "link-package": "^0.1.0"
+    "link-meta": "^1.0.1"
   },
   "devDependencies": {
     "webextension-polyfill": "^0.7.0"

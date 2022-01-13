@@ -13,9 +13,15 @@ const SERVER_WINDOW_UNDO =  "http://localhost:3111/undo"
 const DEFAULT_CLICK_CONTEXT = "domains"
 const DEBUGGING = true
 
-let g_application_mail = false
 
+// -- g_application_mail    --- set by web page (not by extension)
+let g_application_mail = false      // set by a dashboard specific to a user session
 
+// NOTE: if g_application_mail has a value, then buttons made for communicating with topic list elements and the dashboard are shown
+//
+
+// g_keep_data_around
+// Shorten the trip to the server
 let g_keep_data_around = {
   "windows" : "nada",
   "topics" : "nada",
@@ -61,6 +67,9 @@ async function postData(url = '', data = {}, creds = 'omit', do_stringify = true
     try {
       return await response.json(); // parses JSON response into native JavaScript objects
     } catch (e) {
+      alert("parse json")
+      alert(e)
+      alert(response)
       console.log(e)
       console.log(response)
       return({})
@@ -174,13 +183,15 @@ function gather_window_tabs() {
 // // // // // // // // // // // // // // // // // // //
 
 
-
+// logTopic
+// show the list of tabs or domains as buttons with responses made for opening them again
+// or for puting them into a dashboard for use.
 function logTopic(topic_tables,topics,without_filter,click_context) {
 
-  g_keep_data_around[click_context] = topics
+  g_keep_data_around[click_context] = topics    // keep local memory of satisfied requests
 
   topic_tables.innerHTML = ""
-  for (let topic of topics) {   // these are links determined by the server; the links are to groups of tabs
+  for ( let topic of topics ) {   // these are links determined by the server; the links are to groups of tabs
     let tabs_finder = topic.link
     //
     if ( click_context === undefined ) {
@@ -190,43 +201,44 @@ function logTopic(topic_tables,topics,without_filter,click_context) {
     let element = document.createElement('li')
     let btn = document.createElement('button')
     //
-    btn.addEventListener('click',((tf) => {
+    btn.addEventListener('click',((tf) => {  // the button that is always shown (with or without dashboard)
         return((ev) => {
           fetch_topic(tf,without_filter)              // FETCH TOPIC fetch_topic, From a link to the server
         })
       })(tabs_finder))
     //
     let store_it = false
-    if ( g_application_mail !== false && g_application_mail && g_application_mail.length ) {
-        store_it = document.createElement('button')
-        store_it.addEventListener('click',((tf) => {
-          return(async (ev) => {
-            let link_package = await fetch_topic_link_package(tf,click_context)              // FETCH TOPIC fetch_topic, From a link to the server
-            if ( link_package ) {
-              inject_topic_into_dashboard(tf,link_package)
-            } else {
-              console.log("no link package for ")
-            }
-          })
-        })(tabs_finder))
-      }
+    if ( (g_application_mail !== false) && g_application_mail && g_application_mail.length ) {
       //
-      if ( store_it !== false && store_it ) {
-        element.appendChild(store_it)
-        store_it.innerHTML = "&#8595;"
-      }
-
-      if ( topic.count !== undefined ) {
-        let counter = document.createElement('span')
-        counter.className = "counter_box"
-        counter.innerHTML = topic.count
-        element.appendChild(counter)
-      }
-
-      element.appendChild(btn)
-      btn.innerHTML = topic.descr
-      topic_tables.appendChild(element)
+      store_it = document.createElement('button')
+      store_it.addEventListener('click',((tf) => {
+        return(async (ev) => {
+          let link_package = await fetch_topic_link_package(tf,click_context)              // FETCH TOPIC fetch_topic, From a link to the server
+          if ( link_package ) {
+            inject_topic_into_dashboard(tf,link_package)
+          } else {
+            console.log("no link package for ")
+          }
+        })
+      })(tabs_finder))
     }
+    //
+    if ( store_it !== false && store_it ) {
+      element.appendChild(store_it)
+      store_it.innerHTML = "&#8595;"
+    }
+
+    if ( topic.count !== undefined ) {
+      let counter = document.createElement('span')
+      counter.className = "counter_box"
+      counter.innerHTML = topic.count
+      element.appendChild(counter)
+    }
+
+    element.appendChild(btn)
+    btn.innerHTML = topic.descr
+    topic_tables.appendChild(element)
+  }
 }
 
 
@@ -267,8 +279,10 @@ async function retrieve_tab_topics(post_channel,result_location,without_filter,c
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 //
 function spawn_if_new_tabs(tabs,data) {
+  let links = JSON.parse(data.package)
   //debug(`spawn_if_new_tabs  : ${ data.links } ${typeof data.links }`)
-  for ( let url of data.links ) {
+  for ( let url of links._links ) {
+    alert(url)
     if ( tabs.find((atab) => { return(atab.url === url) }) === undefined ) {
       chrome.tabs.create({
         "url": url
@@ -279,10 +293,10 @@ function spawn_if_new_tabs(tabs,data) {
 
 
 function spawn_tabs(search_result,without_filter) {
-  let data = JSON.parse(search_result.result)
+  let data = (typeof search_result.result === "string") ? JSON.parse(search_result.result) : search_result
   if ( without_filter ) {
-debug(`spawn_tabs NO filtered: ${ data.links } ${typeof data.links}`)
-    for ( let url of data.links ) {   // create tabs and don't check to see if it is there
+debug(`spawn_tabs NO filtered: ${ data._links } ${typeof data._links}`)
+    for ( let url of data.package._links ) {   // create tabs and don't check to see if it is there
       chrome.tabs.create({
         "url": url
       });
@@ -410,6 +424,8 @@ async function fetch_topic(topic,without_filter) {
               if ( response.OK === "true" ) {
                   let data = response.data
                   spawn_tabs(data,without_filter)       // given a group of tabs has been returned, open the tabs in the current window.
+              } else {
+                alert("no tab response")
               }
             } catch (e) {
               alert(e)
@@ -491,6 +507,7 @@ async function fetch_topic_link_package(topic,click_context) {
 
 // DISPLAY STYLING...
 //
+//    show the (navigation) tab with the tab specific list results
 function openResults(currentTarget, tabName) {
   // Declare all variables
   let tabcontent, tablinks;
@@ -524,7 +541,8 @@ function listenForClicks() {
         openResults(target, "gathered_tabs")
         save_everything()
       } else if ( e.target.classList.contains("getter") ) {
-        await retrieve_tab_topics(SERVER_TOPICS_POST,"topic_list",false,"topics")    // retrieve all tabs last stored into the server...
+        let no_filter = false
+        await retrieve_tab_topics(SERVER_TOPICS_POST,"topic_list",no_filter,"topics")    // retrieve all tabs last stored into the server...
         let target =  document.getElementById("pick-requested_topics")
         openResults(target, "requested_topics")
         save_everything()
@@ -556,7 +574,7 @@ function listenForClicks() {
         let target =  document.getElementById("pick-window_gathered")
         openResults(target, "window_gathered") 
         save_everything()
-      } else if ( e.target.classList.contains("wgetter") ) {
+      } else if ( e.target.classList.contains("wgetter") ) {  // this has a filter
         await retrieve_tab_topics(SERVER_WINDOW_POST,"window_list",true,"windows")   // retrieve links to window tab sets ... tabs last stored into server...
         let target =  document.getElementById("pick-requested_windows")
         openResults(target, "requested_windows")

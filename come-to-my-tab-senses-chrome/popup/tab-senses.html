@@ -28,115 +28,134 @@
         </div>
       </div>
 
-      <div style="height:38px;display:inline-block">
-        <button class="gather" >Gather Tabs</button>
-        <button class="saver" >Save Tabs</button>
-        <button class="getter" >Retrieve Topics</button>
-        <button class="dgetter" >Retrieve Domains</button>        
-      </div>
-      <div style="background-color: blanchedalmond;padding: 4px;border: 1px solid rgb(82, 9, 82)">
+      <div id="show_on_init_1" >
         <div style="height:38px;display:inline-block">
-          <button class="wgather" >Gather Window Tabs</button>
-          <button class="wsaver" >Save Window</button>
-          <button class="wgetter" >Retrieve Windows</button>
+          <button class="gather" >Gather Tabs</button>
+          <button class="saver" >Save Tabs</button>
+          <button class="getter" >Retrieve Topics</button>
+          <button class="dgetter" >Retrieve Domains</button>        
+        </div>
+        <div style="background-color: blanchedalmond;padding: 4px;border: 1px solid rgb(82, 9, 82)">
+          <div style="height:38px;display:inline-block">
+            <button class="wgather" >Gather Window Tabs</button>
+            <button class="wsaver" >Save Window</button>
+            <button class="wgetter" >Retrieve Windows</button>
+        </div>
+        </div>
+        <input id="all_tabs" type="hidden" value="" >
+        <input id="window_tabs" type="hidden" value="" >
       </div>
+      <div style="background-color: rgb(250, 224, 186);padding: 4px;border: 1px solid rgb(9, 32, 82)" >
+          <label>Enter your email for fetching or saving:</label> <input type="email" name="uemail" id="uemail" value=""   />
       </div>
-      <input id="all_tabs" type="hidden" value="" >
-      <input id="window_tabs" type="hidden" value="" >
-    </div>
-    <div style="background-color: rgb(250, 224, 186);padding: 4px;border: 1px solid rgb(9, 32, 82)" >
-        <label>Enter your email for fetching or saving:</label> <input type="email" name="uemail" id="uemail" value=""   />
     </div>
   </div>
 
-   <!-- Tab links -->
-  <div class="tab">
-    <button id="pick-gathered_tabs" class="tablinks active" >Gathered</button>
-    <button id="pick-requested_topics" class="tablinks" >Topics</button>
-    <button id="pick-requested_clusters" class="tablinks" >Clustering</button>
-    <button id="pick-requested_domains" class="tablinks" >Domains</button>
-    <button id="pick-window_gathered" class="tablinks" >This Window Tabs</button>
-    <button id="pick-requested_windows" class="tablinks" >Windows</button>
-    <button id="pick-requested_help" class="tablinks" >Help</button>
-  </div>
+  <div id="show_on_init_2" >
+    <!-- Tab links -->
+    <div class="tab">
+      <button id="pick-gathered_tabs" class="tablinks active" >Gathered</button>
+      <button id="pick-requested_topics" class="tablinks" >Topics</button>
+      <button id="pick-requested_clusters" class="tablinks" >Clustering</button>
+      <button id="pick-requested_domains" class="tablinks" >Domains</button>
+      <button id="pick-window_gathered" class="tablinks" >This Window Tabs</button>
+      <button id="pick-requested_windows" class="tablinks" >Windows</button>
+      <button id="pick-requested_help" class="tablinks" >Help</button>
+    </div>
 
-  <div id="gathered_tabs" class="tabcontent" style="display: block;" >
-      <h4>List of Open Tabs</h4>
-      <div style="max-width: 300px;">Click on <b>Gather Tabs</b> to gather tabs from all windows</div>
-      <ul id="tab_list">
+    <div id="gathered_tabs" class="tabcontent" style="display: block;" >
+        <h4>List of Open Tabs</h4>
+        <div style="max-width: 300px;">Click on <b>Gather Tabs</b> to gather tabs from all windows</div>
+        <ul id="tab_list">
+            
+        </ul>
+    </div>
+
+    <div id="requested_topics" class="tabcontent" >
+      <h4>List of Stored Topics</h4> 
+      <div style="max-width: 300px">Click on <b>Retrieve Topics</b> to see all of the topics found in the tabs that you previously saved. 
+        Results will be sorted by how many tabs they attract.</div>
+      <ul id="topic_list">
           
       </ul>
-  </div>
+    </div>
 
-  <div id="requested_topics" class="tabcontent" >
-    <h4>List of Stored Topics</h4> 
-    <div style="max-width: 300px">Click on <b>Retrieve Topics</b> to see all of the topics found in the tabs that you previously saved. 
-      Results will be sorted by how many tabs they attract.</div>
-    <ul id="topic_list">
-        
-    </ul>
-  </div>
-
-  <div id="requested_clusters" class="tabcontent" >
-    <h4>List of Stored Topics</h4> 
-    <div style="max-width: 300px">Enter up to five key words that you think will attract more tabs. Then, click 
-      <button class="cluster" >cluster</button>
-      to update your topics</div>
-    <ol id="user_clusters">
-        <li>
-          <input id="uc_1" type="text" value = "" />
-        </li>
-        <li>
-          <input id="uc_2" type="text" value = "" />
-        </li>
-        <li>
-          <input id="uc_3" type="text" value = "" />
-        </li>
-        <li>
-          <input id="uc_4" type="text" value = "" />
-        </li>
-        <li>
-          <input id="uc_5" type="text" value = "" />
-        </li>
-      </ol>
-  </div>
+    <div id="requested_clusters" class="tabcontent" >
+      <h4>List of Stored Topics</h4> 
+      <div style="max-width: 300px">Enter up to five key words that you think will attract more tabs. Then, click 
+        <button class="cluster" >cluster</button>
+        to update your topics</div>
+      <ol id="user_clusters">
+          <li>
+            <input id="uc_1" type="text" value = "" />
+          </li>
+          <li>
+            <input id="uc_2" type="text" value = "" />
+          </li>
+          <li>
+            <input id="uc_3" type="text" value = "" />
+          </li>
+          <li>
+            <input id="uc_4" type="text" value = "" />
+          </li>
+          <li>
+            <input id="uc_5" type="text" value = "" />
+          </li>
+        </ol>
+    </div>
 
 
-  <div id="requested_domains" class="tabcontent" >
-    <h4>List of Stored Topics</h4> 
-    <div style="max-width: 300px">Click on <b>Retrieve Domains</b> to see all of the topics found in the tabs that you previously saved.</div>
-    <ul id="domain_list">
-        
-    </ul>
-  </div>
- 
-  <div id="window_gathered" class="tabcontent" >
-    <h4>Tabs in This Window</h4> 
-    <div style="max-width: 300px">Click on <b>Gather Window Tabs</b> to gather tabs from this windows</div>
-    <ul id="window_tab_list">
-        
-    </ul>
-  </div>
- 
-  <div id="requested_windows" class="tabcontent" >
-    <h4>List of Stored Windows</h4> 
-    <div style="max-width: 300px">Click on <b>Retrieve Windows</b> to see all of the windows that you previously saved</div>
-    <ul id="window_list">
-        
-    </ul>
-  </div>
+    <div id="requested_domains" class="tabcontent" >
+      <h4>List of Stored Topics</h4> 
+      <div style="max-width: 300px">Click on <b>Retrieve Domains</b> to see all of the topics found in the tabs that you previously saved.</div>
+      <ul id="domain_list">
+          
+      </ul>
+    </div>
+  
+    <div id="window_gathered" class="tabcontent" >
+      <h4>Tabs in This Window</h4> 
+      <div style="max-width: 300px">Click on <b>Gather Window Tabs</b> to gather tabs from this windows</div>
+      <ul id="window_tab_list">
+          
+      </ul>
+    </div>
+  
+    <div id="requested_windows" class="tabcontent" >
+      <h4>List of Stored Windows</h4> 
+      <div style="max-width: 300px">Click on <b>Retrieve Windows</b> to see all of the windows that you previously saved</div>
+      <ul id="window_list">
+          
+      </ul>
+    </div>
 
-  <div id="requested_help" class="tabcontent" style="background-color: rgb(253, 245, 229);cursor:pointer">
-    <h4>How to use</h4> 
-    <div id="help_display" style="max-width: 300px" style="background-color: inherit;color:rgb(133, 0, 0)">
-      help goes here
+    <div id="requested_help" class="tabcontent" style="background-color: rgb(253, 245, 229);cursor:pointer">
+      <h4>How to use</h4>
+      <button id="tab-service-changer">Change tab service provider</button>
+      <div id="help_display" style="max-width: 300px" style="background-color: inherit;color:rgb(133, 0, 0)">
+        help goes here
+      </div>
+    </div>
+  
+
+    <div id="error-content" class="hidden">
+      <p>Can't access the tab-senses tool from this web page.</p><p>Try a different page.</p>
     </div>
   </div>
- 
 
-  <div id="error-content" class="hidden">
-    <p>Can't access the tab-senses tool from this web page.</p><p>Try a different page.</p>
+  <div id="dont_show_if_setup" >
+
+      <label for="choose_server">Choose a server:</label>
+      <select id="select-host-options"  name="choose_server" >
+        <option>localhost:3111</option>
+        <option>tab-sever.copious.world</option>
+        <option>www.firstguytoinstall.org</option>
+      </select>
+      <button id="select-host" >use this tab manager server</button>
+
   </div>
+
+
   <script src="tab-senses.js"></script>
 </body>
 

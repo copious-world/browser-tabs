@@ -1,6 +1,37 @@
 
+// SERVICE WORKER SCRIPT FOR THE TAB MANAGEMENT EXTENSION
+//
+
+
 var g_tabs_db = null;
 
+
+async function do_interface_from_storage() {
+    let gettingItem = chrome.storage.sync.get("email");
+    try {
+        let email_record = await gettingItem
+        if ( email_record ) {
+            if ( Object.keys(email_record).length === 0 ) {
+                console.log("EMPTY INTERFACE")
+                console.log(JSON.stringify(email_record))
+            } else {
+                console.log(JSON.stringify(email_record))
+            }
+        }
+    } catch (e) {
+        console.log(e.message)
+    }
+}
+
+async function do_email_storage(email) {
+    let will_store = chrome.storage.sync.set({"email" : email})
+    try {
+        let did_store = await will_store
+        console.log(did_store)
+    } catch (e) {
+        console.log(e.message)
+    }
+}
 
 function create_database() {
 
@@ -157,6 +188,14 @@ chrome.runtime.onMessage.addListener((message) => {
     console.log("background " + message.command)
     //
     switch ( message.command ) {
+        case "interface-initialize" : {
+            do_interface_from_storage()
+            break;
+        }
+        case "email-update" : {
+            do_email_storage(message.email)
+            break;
+        }
         case "db-initial" : {
             create_database()
             break;

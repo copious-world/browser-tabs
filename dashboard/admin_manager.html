@@ -1020,6 +1020,7 @@ function make_user_active(el) {
   <button onclick="fetch_user_domains('${el}')">domains</button> 
   <button onclick="fetch_user_topics('${el}')" >topics</button> 
   <button onclick="fetch_user_words('${el}')">words</button> 
+  <button onclick="fetch_user_windows('${el}')">windows</button> 
   <button onclick="block_user('${el}')" >block</button> <button onclick="unblock_user('${el}')" >unblock</button>
   `
 
@@ -1094,6 +1095,13 @@ function show_word_links(doml_str) {
   }
 }
 
+function show_window_links(doml_str) {
+  let link_spot = document.getElementById("linkcontent-sub")
+  if ( link_spot ) {
+    link_spot.innerText = doml_str
+  }
+}
+
 
 
 async function fetch_user_domains(user) {
@@ -1161,6 +1169,29 @@ async function fetch_user_words(user) {
         let wobject = u_info[word]
         let dom_links = Object.keys(u_info[word]._url_list).join(',')
         return `<button onclick="show_word_links('${dom_links}')">${word}</button>`
+      })
+      let info_loc = document.getElementById("user-data")
+      if ( info_loc ) {
+        info_loc.innerHTML = info.join("<br>")
+      }
+    }
+  }
+}
+
+
+async function fetch_user_windows(user) {
+
+  let disp_drop = document.getElementById("user-data")
+  if ( disp_drop ) {
+    let postable = {
+      "cmd" : "user-windows",
+      "user" : user
+    }
+    let response = await postData(SERVER_ADMIN_CMD,postable)
+    if ( response.OK === "true" ) {
+      let u_info = response.data    /// an array...
+      let info = u_info.map(window_descr => {
+        return `<button onclick="show_window_links('${window_descr.link}')">${window_descr.descr}</button>`
       })
       let info_loc = document.getElementById("user-data")
       if ( info_loc ) {

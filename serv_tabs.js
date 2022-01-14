@@ -177,6 +177,24 @@ app.post('/admin/:id_token', async (req, res) => {
 })
 
 
+app.post('/select-host', async (req, res) => {
+    //
+    let body = req.body;
+    //
+    try {
+        if ( (body.domain === undefined) ) {
+            return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'false' })));
+        } else {
+            let data = {
+                "domain" : "localhost:3111"
+            }
+            return(res.status(200).send(JSON.stringify({ 'type' : 'admin', 'OK' : "true", "data" : data })));
+        }
+    } catch (e) {
+
+    }
+})
+
 // PATHS
 // ---- ---- ---- ---- ---- ---- ---- ---- ----
 // UPLOAD NEW DATA FOR A USER

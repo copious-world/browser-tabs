@@ -1,13 +1,17 @@
-
-const SERVER_PUT_TABS = "http://localhost:3111/put_tabs"
-const SERVER_PUT_WINDOW = "http://localhost:3111/put_window"
-const SERVER_DOMAIN_POST =  "http://localhost:3111/get_domains"
-const SERVER_TOPICS_POST =  "http://localhost:3111/get_topics"
-const SERVER_TOPIC_TABS_POST = "http://localhost:3111/get_topic_tabs"
-const SERVER_TOPIC_LINKS_POST = "http://localhost:3111/get_link_package"
-const SERVER_WINDOW_POST =  "http://localhost:3111/get_windows"
-const SERVER_WINDOW_CLEAR =  "http://localhost:3111/clear"
-const SERVER_WINDOW_UNDO =  "http://localhost:3111/undo"
+let DEFAULT_URL = 'localhost:3111'
+let CHOSEN_URL = DEFAULT_URL
+//
+let SERVER_PUT_TABS = `http://${CHOSEN_URL}/put_tabs`
+let SERVER_PUT_WINDOW = `http://${CHOSEN_URL}/put_window`
+let SERVER_DOMAIN_POST =  `http://${CHOSEN_URL}/get_domains`
+let SERVER_TOPICS_POST =  `http://${CHOSEN_URL}/get_topics`
+let SERVER_TOPIC_TABS_POST = `http://${CHOSEN_URL}/get_topic_tabs`
+let SERVER_TOPIC_LINKS_POST = `http://${CHOSEN_URL}/get_link_package`
+let SERVER_WINDOW_POST =  `http://${CHOSEN_URL}/get_windows`
+let SERVER_WINDOW_CLEAR =  `http://${CHOSEN_URL}/clear`
+let SERVER_WINDOW_UNDO =  `http://${CHOSEN_URL}/undo`
+//
+let SERVER_SELECT_SERVER =  `http://${CHOSEN_URL}/select-host`
 
 
 const DEFAULT_CLICK_CONTEXT = "domains"
@@ -421,7 +425,6 @@ async function fetch_topic(topic,without_filter,context) {
                 "context" : context                
             }
             try {
-              alert(topic)
               let response = await postData(SERVER_TOPIC_TABS_POST + topic,postable)
               if ( response.OK === "true" ) {
                   let data = response.data
@@ -787,11 +790,137 @@ function load_previous(email) {
   }
 }
 
+
+
+// INITIALIZE OBJECT IN THE BACKGROUND SCRIPT  --- when the interface is ready
 function initialize_db() {
   chrome.runtime.sendMessage({
     "command": 'db-initial'
   })
 }
+
+async function save_store_domain(domain) {
+  let will_store = chrome.storage.sync.set({"server_domain_host" : domain})
+  try {
+      let did_store = await will_store
+      console.log(did_store)
+  } catch (e) {
+      console.log(e.message)
+  }
+
+}
+
+
+function setup_domain_change_access() {
+  let changer = document.getElementById("tab-service-changer")
+  if ( changer ) {
+    changer.addEventListener('click',(ev) => {
+      let init_control_1 = document.getElementById("show_on_init_1")
+      let init_control_2 = document.getElementById("show_on_init_2")
+      init_control_1.style.display = "none"
+      init_control_2.style.display = "none"
+      let domain_chooser = document.getElementById("dont_show_if_setup")
+      domain_chooser.style.display = "block"
+      setup_select_host_options()
+    })
+  }
+}
+
+function initialize_domain_api(domain) {
+  //
+  let init_control_1 = document.getElementById("show_on_init_1")
+  let init_control_2 = document.getElementById("show_on_init_2")
+  init_control_1.style.display = "block"
+  init_control_2.style.display = "block"
+  let domain_chooser = document.getElementById("dont_show_if_setup")
+  domain_chooser.style.display = "none"
+  //
+  let CHOSEN_URL = domain
+  //
+  SERVER_PUT_TABS = `http://${CHOSEN_URL}/put_tabs`
+  SERVER_PUT_WINDOW = `http://${CHOSEN_URL}/put_window`
+  SERVER_DOMAIN_POST =  `http://${CHOSEN_URL}/get_domains`
+  SERVER_TOPICS_POST =  `http://${CHOSEN_URL}/get_topics`
+  SERVER_TOPIC_TABS_POST = `http://${CHOSEN_URL}/get_topic_tabs`
+  SERVER_TOPIC_LINKS_POST = `http://${CHOSEN_URL}/get_link_package`
+  SERVER_WINDOW_POST =  `http://${CHOSEN_URL}/get_windows`
+  SERVER_WINDOW_CLEAR =  `http://${CHOSEN_URL}/clear`
+  SERVER_WINDOW_UNDO =  `http://${CHOSEN_URL}/undo`
+
+  setup_domain_change_access()
+}
+
+async function initialize_domain_ready() {
+  //
+  let init_control_1 = document.getElementById("show_on_init_1")
+  let init_control_2 = document.getElementById("show_on_init_2")
+  init_control_1.style.display = "none"
+  init_control_2.style.display = "none"
+  //
+  let gettingItem = chrome.storage.sync.get("server_domain_host");
+  try {
+    let domain_def_record = await gettingItem
+    if ( domain_def_record ) {
+      if ( Object.keys(domain_def_record).length === 0 ) {
+        let domain_chooser = document.getElementById("dont_show_if_setup")
+        domain_chooser.style.display = "block"
+        setup_select_host_options()
+      } else {
+        let domain_chooser = document.getElementById("dont_show_if_setup")
+        domain_chooser.style.display = "none"
+        //let email = email_record.email
+        let domain = domain_def_record.server_domain_host
+        initialize_domain_api(domain)
+      }
+    }
+    //
+  } catch (e) {
+    alert(e.message)
+  }
+  //
+}
+
+
+
+function initialize_user_interface() {
+  initialize_domain_ready()
+  chrome.runtime.sendMessage({
+    "command": 'interface-initialize'
+  })
+}
+
+
+async function do_interface_from_storage() {
+  let gettingItem = chrome.storage.sync.get("email");
+  try {
+      let email_record = await gettingItem
+      if ( email_record ) {
+          if ( Object.keys(email_record).length === 0 ) {
+            alert("EMPTY INTERFACE")
+          } else {
+            let email = email_record.email
+            let email_in = document.getElementById('uemail')
+            if ( email_in ) {
+              email_in.value = email
+              //
+              if ( email.length ) {
+                let dash_link = document.getElementById("dashlink")
+                if ( dash_link ) {
+                  dash_link.href = `http://${CHOSEN_URL}/dashboard/${email}`
+                } else {
+                  alert("no dash")
+                }
+              }
+              //
+            }
+          }
+      }
+  } catch (e) {
+    alert(e.message)
+  }
+}
+
+
 
 /**
  * When the popup loads, inject a content script into the active tab,
@@ -800,6 +929,9 @@ function initialize_db() {
 */
 listenForClicks()
 initialize_dashboard()
+initialize_user_interface()
+do_interface_from_storage()
+//
 
 function setup_key_event() {
   document.addEventListener("change",(ev) => {
@@ -815,10 +947,57 @@ function update_dash_link(ev) {
     if ( email && email.length ) {
       let dash_link = document.getElementById("dashlink")
       if ( dash_link ) {
-        dash_link.href = `http://localhost:3111/dashboard/${email}`
+        dash_link.href = `http://${CHOSEN_URL}/dashboard/${email}`
       }
+      // ALSO CHANGE THE STORAGE AS TO WHO THE USER IS
+      chrome.runtime.sendMessage({
+        "command": 'email-update',
+        "email" : email
+      })
+    
     }
   }
 }
 
+
+function setup_select_host_options() {
+  let option_button = document.getElementById('select-host')
+  if ( option_button ) {
+    option_button.addEventListener('click',async (ev) => {
+      let option_box = document.getElementById('select-host-options')
+      let domain = option_box.value
+      let postable = {
+        "domain" : domain
+      }
+      try {
+        let post_channel = SERVER_SELECT_SERVER
+        let response = await postData(post_channel,postable)
+        if ( response.OK === "true" ) {
+          //
+          let data = response.data
+          //
+          //show_on_init_2
+          let init_control_1 = document.getElementById("show_on_init_1")
+          let init_control_2 = document.getElementById("show_on_init_2")
+          init_control_1.style.display = "block"
+          init_control_2.style.display = "block"
+          let domain_chooser = document.getElementById("dont_show_if_setup")
+          domain_chooser.style.display = "none"
+          //
+          initialize_domain_api(domain)
+          save_store_domain(CHOSEN_URL)
+          //
+        }
+      } catch (e) {
+        alert(e.message)
+      }
+    })
+  }
+  //
+}
+
+
 setup_key_event() 
+
+
+

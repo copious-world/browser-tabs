@@ -630,6 +630,7 @@ function initialize_dashboard() {
           let user_mail = document.getElementById('uemail')
           user_mail.value = mail
           load_previous(g_application_mail)
+          //
         }
         //
     }).catch(reportError);

@@ -201,9 +201,10 @@ function logTopic(topic_tables,topics,without_filter,click_context) {
     let element = document.createElement('li')
     let btn = document.createElement('button')
     //
+    //
     btn.addEventListener('click',((tf) => {  // the button that is always shown (with or without dashboard)
         return((ev) => {
-          fetch_topic(tf,without_filter)              // FETCH TOPIC fetch_topic, From a link to the server
+          fetch_topic(tf,without_filter,click_context)              // FETCH TOPIC fetch_topic, From a link to the server
         })
       })(tabs_finder))
     //
@@ -282,7 +283,7 @@ function spawn_if_new_tabs(tabs,data) {
   let links = JSON.parse(data.package)
   //debug(`spawn_if_new_tabs  : ${ data.links } ${typeof data.links }`)
   for ( let url of links._links ) {
-    alert(url)
+    //alert(url)
     if ( tabs.find((atab) => { return(atab.url === url) }) === undefined ) {
       chrome.tabs.create({
         "url": url
@@ -407,19 +408,20 @@ async function save_window() {
 
 
 
-
 // ---- ---- ---- ---- ---- ---- ----
 //
-async function fetch_topic(topic,without_filter) {
+async function fetch_topic(topic,without_filter,context) {
   try {
     let email_in = document.getElementById('uemail')
     if ( email_in ) {
         let email = email_in.value
         if ( email.length ) {
             let postable = {
-                "email" : email
+                "email" : email,
+                "context" : context                
             }
             try {
+              alert(topic)
               let response = await postData(SERVER_TOPIC_TABS_POST + topic,postable)
               if ( response.OK === "true" ) {
                   let data = response.data

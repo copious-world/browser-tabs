@@ -250,6 +250,46 @@ app.post('/put_window',(req, res) => {
 // RETRIEVE STORED DATA FOR A USER
 // ---- ---- ---- ---- ---- ---- ---- ---- ----
 
+
+
+//
+// /get_topic_tabs/:which_topic - GET THE TABS FOR A PARTICULAR TOPIC
+//
+app.post('/get_topic_tabs/:which_topic', (req, res) => {
+    //
+    let body = req.body;
+    let topic = req.params.which_topic
+    //
+    let user_keeper = admin.id_to_user_keeper(body)
+    if ( user_keeper ) {
+        let context = body.context
+        //
+        let topic_list = false
+        if ( context === 'topics' ) {
+            topic_list = user_keeper.get_topic_list(topic)  // TOPICS -- no compute
+        } else if (  context === 'domains' ) {
+            let domain = topic
+            topic_list = user_keeper.get_domain_list(domain)  // DOMAINS -- no compute
+        } else {
+            topic_list = user_keeper.get_topic_list(topic)  // TOPICS -- no compute
+        }
+        //
+        if ( topic_list !== undefined ) {
+            let link_meta = link_package_from(topic_list,topic,body.email)   // construct a link package 
+            return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true', 'data' : link_meta })));
+        }
+    } else {
+        let tab_list = g_all_domains[topic]     // generic topics
+        if ( tab_list !== undefined  ) {
+            return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true', 'data' : tab_list })));
+        }
+    }
+    //  fail
+    return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'false' })));
+})
+
+
+
 //
 // /get_topics - TOPICS ... All the topics that were found for this user before the last reboot.
 //
@@ -270,33 +310,6 @@ app.post('/get_topics',(req, res) => {
     //
 })
 
-
-
-//
-// /get_topic_tabs/:which_topic - GET THE TABS FOR A PARTICULAR TOPIC
-//
-app.post('/get_topic_tabs/:which_topic', (req, res) => {
-    //
-    let body = req.body;
-    let topic = req.params.which_topic
-    //
-    let user_keeper = admin.id_to_user_keeper(body)
-    if ( user_keeper ) {
-        let topic_list = user_keeper.get_topic_list(topic)  // TOPICS -- no compute
-        if ( topic_list !== undefined ) {
-            let link_meta = link_package_from(topic_list,topic,body.email)   // construct a link package 
-console.dir(link_meta)
-            return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true', 'data' : link_meta })));
-        }
-    } else {
-        let tab_list = g_all_domains[topic]     // generic topics
-        if ( tab_list !== undefined  ) {
-            return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true', 'data' : tab_list })));
-        }
-    }
-    //  fail
-    return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'false' })));
-})
 
 
 

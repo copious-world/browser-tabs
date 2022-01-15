@@ -162,6 +162,9 @@ function tab_gather(tabs,tabs_stored,list_loc) {
 }
 
 
+//
+// gather_tabs
+//  -- gather all tabs... all windows open
 function gather_tabs() {
   return new Promise ((resolve,reject) => {
     chrome.tabs.query({})
@@ -172,7 +175,8 @@ function gather_tabs() {
   })
 }
 
-
+// gather_window_tabs
+// -- specifically request tabs from the current window
 function gather_window_tabs() {
   return new Promise ((resolve,reject) => {
     chrome.tabs.query({ 'currentWindow': true })
@@ -297,15 +301,21 @@ function spawn_if_new_tabs(tabs,data) {
 }
 
 
+function spawn_one_tab(data) {
+  let links = JSON.parse(data.package)
+  for ( let url of links._links ) {
+    chrome.tabs.create({
+      "url": url
+    });
+  }
+
+}
+
+
 function spawn_tabs(search_result,without_filter) {
   let data = (typeof search_result.result === "string") ? JSON.parse(search_result.result) : search_result
   if ( without_filter ) {
-debug(`spawn_tabs NO filtered: ${ data._links } ${typeof data._links}`)
-    for ( let url of data.package._links ) {   // create tabs and don't check to see if it is there
-      chrome.tabs.create({
-        "url": url
-      });
-    }
+    spawn_one_tab(data)
   } else {
     chrome.tabs.query({})     // query current tabs and only open ones not currenly open.
       .then((tabs) => { spawn_if_new_tabs(tabs,data) })

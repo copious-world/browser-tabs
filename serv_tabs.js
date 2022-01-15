@@ -283,13 +283,22 @@ app.post('/get_topic_tabs/:which_topic', (req, res) => {
         let context = body.context
         //
         let topic_list = false
-        if ( context === 'topics' ) {
-            topic_list = user_keeper.get_topic_list(topic)  // TOPICS -- no compute
-        } else if (  context === 'domains' ) {
-            let domain = topic
-            topic_list = user_keeper.get_domain_list(domain)  // DOMAINS -- no compute
-        } else {
-            topic_list = user_keeper.get_topic_list(topic)  // TOPICS -- no compute
+        switch ( context ) {
+            case "topics" : {
+                topic_list = user_keeper.get_topic_list(topic)
+                break
+            }
+            case "domains" : {
+                topic_list = user_keeper.get_domain_list(topic)
+                break
+            }
+            case "windows" : {
+                topic_list = user_keeper.get_window_list(topic)
+                break
+            }
+            default : {
+                topic_list = user_keeper.get_topic_list(topic)
+            }
         }
         //
         if ( topic_list !== undefined ) {
@@ -376,12 +385,29 @@ app.post('/get_link_package/:which_topic', (req, res) => {
     //
     let body = req.body;
     let topic = req.params.which_topic
-    let topic_source = body.sel_topic_domain
+    let context = body.sel_topic_domain
     //
     let user_keeper = admin.id_to_user_keeper(body)
     if ( user_keeper ) {
         //
-        let topic_list = (topic_source === "topics") ? user_keeper.get_topic_list(topic) :  user_keeper.get_domain_list(topic)
+        let topic_list = false 
+        switch ( context ) {
+            case "topics" : {
+                topic_list = user_keeper.get_topic_list(topic)
+                break
+            }
+            case "domains" : {
+                topic_list = user_keeper.get_domain_list(topic)
+                break
+            }
+            case "windows" : {
+                topic_list = user_keeper.get_window_list(topic)
+                break
+            }
+            default : {
+                topic_list = user_keeper.get_topic_list(topic)
+            }
+        }
         if ( topic_list !== undefined ) {
             return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true', 'data' : topic_list })));
         }

@@ -1098,7 +1098,12 @@ function show_word_links(doml_str) {
 function show_window_links(doml_str) {
   let link_spot = document.getElementById("linkcontent-sub")
   if ( link_spot ) {
-    link_spot.innerText = doml_str
+    let url_array = doml_str.split(',')
+    url_array = url_array.map(url => {
+      return `<a href="${url}" target="TABS-COPIOUS-RETRIEVE">${url}</a>`
+    })
+    url_array = url_array.join("<br>")
+    link_spot.innerHTML = url_array
   }
 }
 
@@ -1191,7 +1196,15 @@ async function fetch_user_windows(user) {
     if ( response.OK === "true" ) {
       let u_info = response.data    /// an array...
       let info = u_info.map(window_descr => {
-        return `<button onclick="show_window_links('${window_descr.link}')">${window_descr.descr}</button>`
+        let wtabs = window_descr.tabs
+        if ( wtabs ) {
+          wtabs = wtabs.map((ldescr) => {
+            let link = ldescr.url
+            return link
+          })
+          let dom_links = wtabs.join(',')
+          return `<button onclick="show_window_links('${dom_links}')">${window_descr.descr}</button>`
+        }
       })
       let info_loc = document.getElementById("user-data")
       if ( info_loc ) {

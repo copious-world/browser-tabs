@@ -2,6 +2,8 @@
 // build on top of copious-transitions dashboard modules.
 
 (function() {
+
+    let copious = chrome
     /**
      * Check and set a global guard variable.
      * If this content script is injected into the same page again,
@@ -65,7 +67,7 @@
      * Listen for messages from the background script.
      * Call "add_link_packge_from_extension()" 
     */
-    chrome.runtime.onMessage.addListener((message) => {
+    copious.runtime.onMessage.addListener((message) => {
       if ( message === undefined ) return
       if ( message.command === undefined ) return
 

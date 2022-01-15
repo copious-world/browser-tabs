@@ -6,8 +6,11 @@
 var g_tabs_db = null;
 
 
+const copious = chrome
+
+
 async function do_interface_from_storage() {
-    let gettingItem = chrome.storage.sync.get("email");
+    let gettingItem = copious.storage.sync.get("email");
     try {
         let email_record = await gettingItem
         if ( email_record ) {
@@ -24,7 +27,7 @@ async function do_interface_from_storage() {
 }
 
 async function do_email_storage(email) {
-    let will_store = chrome.storage.sync.set({"email" : email})
+    let will_store = copious.storage.sync.set({"email" : email})
     try {
         let did_store = await will_store
         console.log(did_store)
@@ -181,7 +184,7 @@ function delete_record(email) {
  * Listen for messages from the background script.
  * Call "add_link_packge_from_extension()" 
 */
-chrome.runtime.onMessage.addListener((message) => {
+copious.runtime.onMessage.addListener((message) => {
 
     if ( message === undefined ) return
     if ( message.command === undefined ) return

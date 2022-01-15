@@ -18,6 +18,9 @@ const DEFAULT_CLICK_CONTEXT = "domains"
 const DEBUGGING = true
 
 
+const copious = chrome
+
+
 // -- g_application_mail    --- set by web page (not by extension)
 let g_application_mail = false      // set by a dashboard specific to a user session
 
@@ -167,7 +170,7 @@ function tab_gather(tabs,tabs_stored,list_loc) {
 //  -- gather all tabs... all windows open
 function gather_tabs() {
   return new Promise ((resolve,reject) => {
-    chrome.tabs.query({})
+    copious.tabs.query({})
     .then((tabs) => { tab_gather(tabs,'all_tabs','tab_list'); resolve(true); })
     .catch(
       (err) => { reportError(err); reject(err) }
@@ -179,7 +182,7 @@ function gather_tabs() {
 // -- specifically request tabs from the current window
 function gather_window_tabs() {
   return new Promise ((resolve,reject) => {
-    chrome.tabs.query({ 'currentWindow': true })
+    copious.tabs.query({ 'currentWindow': true })
     .then((tabs) => { tab_gather(tabs,'window_tabs','window_tab_list'); resolve(true); })
     .catch(
       (err) => { reportError(err); reject(err) }
@@ -293,7 +296,7 @@ function spawn_if_new_tabs(tabs,data) {
   for ( let url of links._links ) {
     //alert(url)
     if ( tabs.find((atab) => { return(atab.url === url) }) === undefined ) {
-      chrome.tabs.create({
+      copious.tabs.create({
         "url": url
       });
     }
@@ -304,7 +307,7 @@ function spawn_if_new_tabs(tabs,data) {
 function spawn_one_tab(data) {
   let links = JSON.parse(data.package)
   for ( let url of links._links ) {
-    chrome.tabs.create({
+    copious.tabs.create({
       "url": url
     });
   }
@@ -317,7 +320,7 @@ function spawn_tabs(search_result,without_filter) {
   if ( without_filter ) {
     spawn_one_tab(data)
   } else {
-    chrome.tabs.query({})     // query current tabs and only open ones not currenly open.
+    copious.tabs.query({})     // query current tabs and only open ones not currenly open.
       .then((tabs) => { spawn_if_new_tabs(tabs,data) })
       .catch(reportError);
   }
@@ -404,7 +407,7 @@ let cluster_points = get_cluster_point_list()
 
 
 async function save_window() {
-  chrome.tabs.query({ 'currentWindow': true })
+  copious.tabs.query({ 'currentWindow': true })
       .then((tabs) => {
         tab_gather(tabs,'window_tabs','window_tab_list')
         tab_field_saver('window_tab_list',SERVER_PUT_WINDOW)
@@ -634,7 +637,7 @@ function reportExecuteScriptError(error) {
 async function show_help() {
   if ( DEBUGGING ) return
   //
-  let help_url = chrome.runtime.getURL("docs/help.html");
+  let help_url = copious.runtime.getURL("docs/help.html");
   let options = {
     method: 'GET', // *GET, POST, PUT, DELETE, etc.
   }
@@ -668,8 +671,8 @@ async function initialize_dashboard() {
   //
   try {
     let queryOptions = { active: true, currentWindow: true };
-    let tabs = await chrome.tabs.query(queryOptions);
-    let response = await chrome.tabs.sendMessage( tabs[0].id, { "command" : "initial" })
+    let tabs = await copious.tabs.query(queryOptions);
+    let response = await copious.tabs.sendMessage( tabs[0].id, { "command" : "initial" })
     if ( response ) {
       g_application_mail = false  // reset 
       //
@@ -695,13 +698,13 @@ async function initialize_dashboard() {
 function inject_topic_into_dashboard(package_name,link_package) {
   let send_topics = (tabs) => {
     console.log(link_package)
-    chrome.tabs.sendMessage(
+    copious.tabs.sendMessage(
       tabs[0].id,
       { "command" : "topics", "topics_or_domains" : link_package, "package_name" : package_name  }
     ).catch(reportError);
   }
   if ( g_application_mail && g_application_mail.length ) {
-    chrome.tabs.query({active: true, currentWindow: true}).then(send_topics)
+    copious.tabs.query({active: true, currentWindow: true}).then(send_topics)
     .catch(reportError);  
   }
 }
@@ -724,14 +727,14 @@ function save_everything() {
     }
     console.log("save_everything::  " + data_to_save)
     //
-    chrome.runtime.sendMessage(storage_record)
+    copious.runtime.sendMessage(storage_record)
   }
 }
   
 function delete_everything() {
   let email = g_application_mail
   if ( email ) {
-    chrome.runtime.sendMessage({
+    copious.runtime.sendMessage({
         "command": 'delete',
         "email": email
     })
@@ -742,7 +745,7 @@ function delete_everything() {
 
 function load_previous(email) {
   if ( email !== false  ) {
-    chrome.runtime.sendMessage({
+    copious.runtime.sendMessage({
       "command": 'get',
       "email": email
     }).then( response => {
@@ -804,13 +807,13 @@ function load_previous(email) {
 
 // INITIALIZE OBJECT IN THE BACKGROUND SCRIPT  --- when the interface is ready
 function initialize_db() {
-  chrome.runtime.sendMessage({
+  copious.runtime.sendMessage({
     "command": 'db-initial'
   })
 }
 
 async function save_store_domain(domain) {
-  let will_store = chrome.storage.sync.set({"server_domain_host" : domain})
+  let will_store = copious.storage.sync.set({"server_domain_host" : domain})
   try {
       let did_store = await will_store
       console.log(did_store)
@@ -867,7 +870,7 @@ async function initialize_domain_ready() {
   init_control_1.style.display = "none"
   init_control_2.style.display = "none"
   //
-  let gettingItem = chrome.storage.sync.get("server_domain_host");
+  let gettingItem = copious.storage.sync.get("server_domain_host");
   try {
     let domain_def_record = await gettingItem
     if ( domain_def_record ) {
@@ -894,14 +897,14 @@ async function initialize_domain_ready() {
 
 function initialize_user_interface() {
   initialize_domain_ready()
-  chrome.runtime.sendMessage({
+  copious.runtime.sendMessage({
     "command": 'interface-initialize'
   })
 }
 
 
 async function do_interface_from_storage() {
-  let gettingItem = chrome.storage.sync.get("email");
+  let gettingItem = copious.storage.sync.get("email");
   try {
       let email_record = await gettingItem
       if ( email_record ) {
@@ -960,7 +963,7 @@ function update_dash_link(ev) {
         dash_link.href = `http://${CHOSEN_URL}/dashboard/${email}`
       }
       // ALSO CHANGE THE STORAGE AS TO WHO THE USER IS
-      chrome.runtime.sendMessage({
+      copious.runtime.sendMessage({
         "command": 'email-update',
         "email" : email
       })

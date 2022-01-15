@@ -25,11 +25,16 @@ button {
   cursor: pointer;
 }
 
-.gather {
+.word-divs {
+  margin-bottom: 4px;
+}
+
+
+.ulist {
   background-color: #11531f;
   color: white;
 }
-.gather:hover {
+.ulist:hover {
   background-color: #cfeeee;
   color:#11531f
 }
@@ -51,30 +56,36 @@ button {
 }
 
 
-.getter {
+.reloader {
   background-color: #FBFBC9;
 }
-.getter:hover {
+.reloader:hover {
   background-color: #DAEA9D;
 }
 
-.dgetter {
+.shutdown {
   background-color: #FBFBC9;
 }
-.dgetter:hover {
+.shutdown:hover {
   background-color: #EAEA9D;
 }
 
 
-.wgather {
+.wulist {
   background-color: #11531f;
   color: white;
 }
-.wgather:hover {
+.wulist:hover {
   background-color: #cfeeee;
   color:#11531f
 }
 
+
+.user-name {
+  font-weight: 800;
+  font-size: larger;
+  color:rgb(122, 27, 3)
+}
 
 .wsaver {
   background-color: #E5F2F2;
@@ -173,6 +184,11 @@ button {
   border-top: none;
 } 
 
+.tabcontent-sub {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+} 
 .PhIOtjDr_0 {
   fill:none;
   stroke:#1c1448;
@@ -210,45 +226,58 @@ button {
             </svg>
         </a>
       </div>
-      <div style="height:38;display:inline-block">
-        <button class="gather" >Gather Tabs</button>
-        <button class="saver" >Save Tabs</button>
-        <button class="getter" >Retrieve Topics</button>        
-        <button class="dgetter" >Retrieve Domains</button>        
-      </div>
       <div style="background-color: blanchedalmond;padding: 4px;border: 1px solid rgb(82, 9, 82)">
         <div style="height:38;display:inline-block">
           <button class="help_getter" style="background-color:rgb(245, 255, 236);font-weight: bolder;font-size: larger;box-shadow: lightgoldenrodyellow;border-radius: 50%;">?</button>
-          <button class="wgather" >Gather Window Tabs</button>
-          <button class="wsaver" >Save Window</button>
-          <button class="wgetter" >Retrieve Windows</button>
+          <span class="user-name"  >$$USER_IDENTIFIER</span>
+          <button class="wulist" onclick="fetch_user_domains('$$USER_IDENTIFIER')">domains</button> 
+          <button class="wsaver" onclick="fetch_user_topics('$$USER_IDENTIFIER')" >topics</button> 
+          <button class="wulist" onclick="fetch_user_words('$$USER_IDENTIFIER')">words</button> 
+          <button class="wgetter" onclick="fetch_user_windows('$$USER_IDENTIFIER')">windows</button> 
       </div>
       </div>
       <input id="all_tabs" type="hidden" value="" >
       <input id="window_tabs" type="hidden" value="" >
     </div>
     <div style="background-color: rgb(250, 224, 186);padding: 4px;border: 1px solid rgb(9, 32, 82)" >
-        <label>Enter your email for fetching or saving:</label> <input type="email" name="uemail" id="uemail" value="$$USER_IDENTIFIER" />
+        <label>This is your email, from the extension popup, for fetching or saving:</label> <input disabled type="email" name="uemail" id="uemail" value="$$USER_IDENTIFIER" />
     </div>
   </div>
 
    <!-- Tab links -->
   <div class="tab">
-    <button id="pick-gathered_tabs" class="tablinks active" >Gathered</button>
+    <button id="pick-ulisted_tabs" class="tablinks active" >User</button>
     <button id="pick-requested_topics" class="tablinks" >Topics</button>
     <button id="pick-requested_clusters" class="tablinks" >Clustering</button>
     <button id="pick-requested_domains" class="tablinks" >Domains</button>
-    <button id="pick-window_gathered" class="tablinks" >This Window Tabs</button>
+    <button id="pick-window_ulisted" class="tablinks" >This Window Tabs</button>
     <button id="pick-requested_windows" class="tablinks" >Windows</button>
     <button id="pick-requested_help" class="tablinks" >Help</button>
   </div>
 
-  <div id="gathered_tabs" class="tabcontent" style="display: block;" >
-      <h4>List of Open Tabs</h4>
-      <div style="max-width: 300px;">Click on <b>Gather Tabs</b> to gather tabs from all windows</div>
-      <ul id="tab_list">
-          
-      </ul>
+  <div id="ulisted_tabs" class="tabcontent" style="display: block;" >
+      <h4>User Information</h4>
+      <div style="max-width: 300px;">
+        This page belongs to <span class="user-name">$$USER_IDENTIFIER</span>
+        <button onclick="unsort_list(true)">by priority</button>
+        <button onclick="sort_list(true)">sort up</button>
+        <button onclick="sort_list(false)">sort down</button>
+        <button onclick="toggle_grid()">toggle grid</button>
+      </div>
+      <div style="grid-row: auto;height:160px;">
+        <div id="user_list" class="tabcontent-sub" style="display:inline-block;height:150px;overflow:auto;width:40%" >
+
+        </div>
+        <div class="tabcontent-sub" id="linkcontent-sub" style="display:inline-block;height:150px;overflow:auto;width:55%" >
+
+        </div>
+      </div>
+
+      <div  class="tabcontent-sub" style="height:300px;overflow:auto" >
+        <b>List on display:</b> <span id="user-info-id"> </span>
+        <div id="user-data" class="tabcontent-sub" style="height:300px;overflow:auto" >
+        </div>
+      </div>
   </div>
 
   <div id="requested_topics" class="tabcontent" >
@@ -293,9 +322,9 @@ button {
     </ul>
   </div>
  
-  <div id="window_gathered" class="tabcontent" >
+  <div id="window_ulisted" class="tabcontent" >
     <h4>Tabs in This Window</h4> 
-    <div style="max-width: 300px">Click on <b>Gather Window Tabs</b> to gather tabs from this windows</div>
+    <div style="max-width: 300px">Click on <b>ulist Window Tabs</b> to ulist tabs from this windows</div>
     <ul id="window_tab_list">
         
     </ul>
@@ -325,3 +354,895 @@ button {
 </body>
 
 </html>
+<script>
+
+const SERVER_PUT_TABS = "http://localhost:3111/put_tabs"
+const SERVER_PUT_WINDOW = "http://localhost:3111/put_window"
+const SERVER_DOMAIN_POST =  "http://localhost:3111/get_domains"
+const SERVER_TOPICS_POST =  "http://localhost:3111/get_topics"
+const SERVER_TOPIC_TABS_POST = "http://localhost:3111/get_topic_tabs"
+const SERVER_TOPIC_LINKS_POST = "http://localhost:3111/get_link_package"
+const SERVER_WINDOW_POST =  "http://localhost:3111/get_windows"
+const SERVER_WINDOW_CLEAR =  "http://localhost:3111/clear"
+const SERVER_WINDOW_UNDO =  "http://localhost:3111/undo"
+
+// REAL STUFF
+const SERVER_ADMIN_CMD =  "http://localhost:3111/admin/bugzy"
+
+const DEFAULT_CLICK_CONTEXT = "domains"
+
+let g_application_mail = false
+
+
+let g_keep_data_around = {
+  "windows" : "nada",
+  "topics" : "nada",
+  "domains" : "nada",
+  "ulisted" : {
+    "tab_list" : "nada",
+    "window_tab_list" : "nada"
+  }
+}
+
+
+
+
+
+// Generic method for querying the server ... temporary tab storage....
+async function postData(url = '', data = {}, creds = 'omit', do_stringify = true, ctype) {
+  let content_type = 'application/json'
+  if ( ctype !== undefined ) {
+      content_type = ctype
+  }
+  let options = {
+      method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      mode: 'cors', // no-cors, *cors, same-origin
+      cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: creds, // include, *same-origin, omit
+      headers: {
+          'Content-Type': content_type
+      },
+      redirect: 'follow', // manual, *follow, error
+      referrerPolicy: 'no-referrer', // no-referrer, *client
+      body: (do_stringify ? JSON.stringify(data)  : data)	// body data type must match "Content-Type" header
+  }
+
+  if ( ctype === 'multipart/form-data') {
+      delete options.headers['Content-Type']  // content type will be set automatically with a boundary
+  }
+  // Default options are marked with *
+  const response = await fetch(url, options);
+  if ( response.ok == false ) {
+      console.log(response.status + ': ' + response.statusText)
+      return {}
+  } else {
+    try {
+      return await response.json(); // parses JSON response into native JavaScript objects
+    } catch (e) {
+      console.log(e)
+      console.log(response)
+      return({})
+    }
+  }
+}
+
+
+
+/**
+ *  --  Just log the error to the console.
+ */
+function reportError(error) {
+  console.error(`Could not come to my tab senses: ${error}`);
+}
+
+
+
+
+/// INTERACT WITH TABS AND TAB DB
+
+//  logTabs 
+//    -- --  display the tab information in a chosen list... 
+function logTabs(tab_tables,tabs) {
+  tab_tables.innerHTML = ""
+  for (let tab of tabs) {
+      let element = document.createElement('li')
+      let h5 = document.createElement('h5')
+      let dd = document.createElement('dd')
+      //
+      element.appendChild(h5)
+      element.appendChild(dd)
+      h5.innerHTML = tab.url
+      dd.innerHTML = tab.title
+      tab_tables.appendChild(element)
+  }
+}
+
+
+function logList(a_tables,a_list,element_maker) {
+  a_tables.innerHTML = ""
+  for ( let el of a_list ) {
+      let element = document.createElement('li')
+
+      let content_el = element_maker ? element_maker(el) : false
+      if ( !content_el ) {
+        content_el = document.createElement('h5')
+        element.appendChild(content_el)
+        content_el.innerHTML = el
+      }
+
+      a_tables.appendChild(content_el)
+  }
+}
+
+
+
+
+// ---- ---- ---- ---- ---- ---- ----
+//
+function insert_tabs(tab_data,tabs_stored,list_loc) {
+  //
+  g_keep_data_around.ulisted[list_loc] = tab_data
+  //
+  let message_spot = document.getElementById(list_loc)
+  if ( message_spot !== undefined ) {
+    //
+    logTabs(message_spot,tab_data)
+    //
+  }
+
+}
+
+
+// ulist TABS TOGETHER... either all tabs in all windows
+//                      or just tabs from the current window.
+
+
+function tab_ulist(tabs,tabs_stored,list_loc) {
+  //
+  try {
+    // // 
+    let list = []
+    for (let tab of tabs) {
+      // tab.url requires the `tabs` permission
+      list.push({"url" : tab.url, "title" : tab.title} );
+    }
+    // // 
+    try {
+      insert_tabs(list,tabs_stored,list_loc)
+    } catch (ee) {
+      console.log(ee)
+    }
+    //
+  } catch (e) {
+    console.log(e)
+  }
+}
+
+
+// ---- ---- ---- ---- ---- ---- ----
+//
+async function do_op(op) {
+  try {
+    let email_in = document.getElementById('uemail')
+    if ( email_in ) {
+        let email = email_in.value
+        if ( email.length ) {
+            let postable = {
+                "email" : email,
+                "op" : op
+            }
+            try {
+              let response = await postData(SERVER_TOPIC_TABS_POST + topic,postable)
+              if ( response.OK === "true" ) {
+                return
+              }
+            } catch (e) {
+              alert(e)
+            }
+            return
+        } else {
+            alert("your account email is required")
+        }
+    }
+  } catch(e) {
+      alert(e)
+  }
+}
+
+
+
+
+
+// // // // // // // // // // // // // // // // // // //
+// // // // // // // // // // // // // // // // // // //
+
+
+
+function logTopic(topic_tables,topics,without_filter,click_context) {
+
+  g_keep_data_around[click_context] = topics
+
+  topic_tables.innerHTML = ""
+  for (let topic of topics) {   // these are links determined by the server; the links are to groups of tabs
+    let tabs_finder = topic.link
+    //
+    if ( click_context === undefined ) {
+      click_context = DEFAULT_CLICK_CONTEXT
+    }
+    //
+    let element = document.createElement('li')
+    let btn = document.createElement('button')
+    btn.addEventListener('click',((tf) => {
+        return((ev) => {
+          fetch_topic(tf,without_filter)              // FETCH TOPIC fetch_topic, From a link to the server
+        })
+      })(tabs_finder))
+    //
+    let store_it = false
+    if ( g_application_mail !== false && g_application_mail && g_application_mail.length ) {
+        store_it = document.createElement('button')
+        store_it.addEventListener('click',((tf) => {
+          return(async (ev) => {
+            let link_package = await fetch_topic_link_package(tf,click_context)              // FETCH TOPIC fetch_topic, From a link to the server
+            if ( link_package ) {
+              inject_topic_into_dashboard(tf,link_package)
+            } else {
+              console.log("no link package for ")
+            }
+          })
+        })(tabs_finder))
+      }
+      //
+      if ( store_it !== false && store_it ) {
+        element.appendChild(store_it)
+        store_it.innerHTML = "&#8595;"
+      }
+
+      if ( topic.count !== undefined ) {
+        let counter = document.createElement('span')
+        counter.className = "counter_box"
+        counter.innerHTML = topic.count
+        element.appendChild(counter)
+      }
+
+      element.appendChild(btn)
+      btn.innerHTML = topic.descr
+      topic_tables.appendChild(element)
+    }
+}
+
+
+// retrieve the tabs that were stored given the email.
+// There  are two possible post channels at the time of this writing... 
+// One is for all tabs, the other is for a list of windows that were stored.
+async function retrieve_tab_topics(post_channel,result_location,without_filter,context) {
+  try {
+    let email_in = document.getElementById('uemail')
+    if ( email_in ) {
+      let email = email_in.value
+      email = (g_application_mail && g_application_mail.length )? g_application_mail : email
+      if ( email.length  ) {
+        let postable = {
+            "email" : email
+        }
+        let response = await postData(post_channel,postable)
+        if ( response.OK === "true" ) {
+          let data = response.data
+          let topic_spot = document.getElementById(result_location)
+          if ( topic_spot ) {
+            logTopic(topic_spot,data,without_filter,context)   // create buttons with links to groups of tabs
+            return true
+          }
+        }
+      } else {
+          alert("your account email is required")
+      }
+    }
+  } catch(e) {
+      alert(e.message)
+  }
+  return false
+}
+
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+
+
+
+// STORE ... 
+//
+
+async function tab_field_saver(tab_field,post_action,opt_cluster_points) {
+  //
+  //let data_deposit = document.getElementById(tab_field)
+  // let tab_info = data_deposit.value
+  //
+  let tabs_to_send = g_keep_data_around.ulisted[tab_field] 
+  //
+  if ( (tabs_to_send !== undefined) && tabs_to_send.length ) {
+      try {
+          let email_in = document.getElementById('uemail')
+          if ( email_in ) {
+              let email = email_in.value
+              if ( email.length ) {
+                  let postable = {
+                      "email" : email,
+                      "tabs" : tabs_to_send
+                  }
+                  if ( opt_cluster_points !== undefined ) {
+                    postable.c_points = opt_cluster_points
+                  }
+                  let response = await postData(post_action,postable)
+                  if ( response.OK === "true" ) {
+                    let message_spot = document.getElementById("tab_list")
+                    if ( message_spot ) {
+                      let tab_data = [{
+                        url : "tabs have been stored",
+                        title : "log into your dashboard to organize your tabs at ...."
+                      }]
+                      logTabs(message_spot,tab_data)
+                    }
+                  }
+                  return
+              } else {
+                  alert("your account email is required")
+              }
+          }
+      } catch(e) {
+          alert(e)
+      }
+  }
+
+  alert("could not send data")
+}
+
+
+function get_cluster_point_list() {
+  let points = []
+  for ( let i = 0; i < 5; i++ ) {
+    let c_val_holder = document.getElementById(`uc_${i+1}`)
+    if ( c_val_holder ) {
+      let term_point = c_val_holder.value
+      term_point = term_point.trim()
+      if ( term_point.length ) {
+        points.push(term_point)
+      }
+    }
+  }
+  return (points.length ? points : undefined)
+}
+
+async function save_tabs(cluster_points) {
+  if ( cluster_points && cluster_points.length ) {
+    await tab_field_saver('tab_list',SERVER_PUT_TABS,cluster_points)
+  } else {
+    await tab_field_saver('tab_list',SERVER_PUT_TABS)
+  }
+}
+
+/*
+
+let cluster_points = get_cluster_point_list()
+
+*/
+
+
+async function save_window() {
+}
+
+
+
+
+
+// FETCH
+//  Fetch stored data.... 
+
+
+
+
+
+// ---- ---- ---- ---- ---- ---- ----
+//
+async function fetch_topic(topic,without_filter) {
+  try {
+    let email_in = document.getElementById('uemail')
+    if ( email_in ) {
+        let email = email_in.value
+        if ( email.length ) {
+            let postable = {
+                "email" : email
+            }
+            try {
+              let response = await postData(SERVER_TOPIC_TABS_POST + topic,postable)
+              if ( response.OK === "true" ) {
+                  let data = response.data
+                  //spawn_tabs(data,without_filter)       // given a group of tabs has been returned, open the tabs in the current window.
+              }
+            } catch (e) {
+              alert(e)
+            }
+            return
+        } else {
+            alert("your account email is required")
+        }
+    }
+  } catch(e) {
+      alert(e)
+  }
+}
+
+
+// ---- ---- ---- ---- ---- ---- ----
+//
+async function fetch_topic_link_package(topic,click_context) {
+  try {
+    let email_in = document.getElementById('uemail')
+    if ( email_in ) {
+        let email = email_in.value
+        if ( email.length ) {
+            let postable = {
+                "email" : email,
+                "sel_topic_domain" : click_context
+            }
+            try {
+              let response = await postData(SERVER_TOPIC_LINKS_POST + topic,postable)
+              if ( response.OK === "true" ) {
+                  let data = response.data    // list of link packages
+                  return(data)
+              }
+            } catch (e) {
+              alert(e)
+            }
+            return
+        } else {
+            alert("your account email is required")
+        }
+    }
+  } catch(e) {
+      alert(e)
+  }
+  return(false)
+}
+
+
+// DISPLAY STYLING...
+//
+function openResults(currentTarget, tabName) {
+  // Declare all variables
+  let tabcontent, tablinks;
+  // Get all elements with class="tabcontent" and hide them
+  tabcontent = document.getElementsByClassName("tabcontent");
+  tablinks = document.getElementsByClassName("tablinks");
+
+  for (let i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+
+  // Get all elements with class="tablinks" and remove the class "active"
+  for ( let i = 0; i < tablinks.length; i++ ) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+
+  // Show the current tab, and add an "active" class to the button that opened the tab
+  document.getElementById(tabName).style.display = "block";
+  currentTarget.className += " active";
+}
+
+
+// USER INTERACTION...
+//
+function listenForClicks() {
+  document.addEventListener("click", async (e) => {
+    try {
+      if (e.target.classList.contains("ulist")) {
+
+      } else if ( e.target.classList.contains("getter") ) {
+
+      } else if ( e.target.classList.contains("dgetter") ) {
+
+      } else if ( e.target.classList.contains("saver") ) {
+
+      } else if ( e.target.classList.contains("cluster") ) {
+
+      } else if ( e.target.classList.contains("wulist") ) {
+
+      } else if ( e.target.classList.contains("wsaver") ) {
+
+      } else if ( e.target.classList.contains("wgetter") ) {
+
+      } else if ( e.target.classList.contains("help_getter") || ( e.target.id === "pick-requested_help" )  ) {
+        show_help()
+        let target =  document.getElementById("pick-requested_help")
+        openResults(target, "requested_help")
+      } else if ( e.target.classList.contains("tablinks") ) {  // show what's there
+        let id = e.target.id
+        let tartget_name = (id.split('-'))[1]
+        //
+        openResults(e.currentTarget, tartget_name)
+      } else if ( (e.target.id === "requested_help") ) {   // turn off help and look at something else
+        let target =  document.getElementById("pick-ulisted_tabs")
+        openResults(target, "ulisted_tabs")
+      }
+    } catch (err) {
+        
+    }
+
+  });
+}
+
+/**
+ * There was an error executing the script.
+ * Display the popup's error message, and hide the normal UI.
+ */
+function reportExecuteScriptError(error) {
+  document.querySelector("#popup-content").classList.add("hidden");
+  document.querySelector("#error-content").classList.remove("hidden");
+}
+
+
+// ---- ---- ---- ---- ---- ---- ----
+//
+async function show_help() {
+
+}
+
+
+// ---- ---- ---- ---- ---- ---- ----
+//
+function hide_help() {
+  let help_field = document.getElementById("help_display")
+  if ( help_field ) {
+    help_field.innerHTML = ""
+  }
+}
+
+// ---- ---- ---- ---- ---- ---- ----
+//
+function initialize_dashboard() {
+  //
+  console.log("initiaize")
+
+  //initialize_db()
+
+  g_application_mail = false
+  //
+
+}
+
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+//
+function inject_topic_into_dashboard(package_name,link_package) {
+//
+}
+
+
+function save_everything() {
+
+  console.log("save_everything::  ")
+
+  let data_to_save = JSON.stringify(g_keep_data_around)
+  let email = g_application_mail
+  if ( email ) {
+    let storage_record = {
+      "command" : "update",
+      "email" : email,
+      "user_tabs" : {
+        "email" : email,
+        "data" : data_to_save
+      }
+    }
+    console.log("save_everything::  " + data_to_save)
+    //
+    //
+  }
+}
+  
+function delete_everything() {
+  let email = g_application_mail
+  if ( email ) {
+  }
+}
+
+
+
+function load_previous(email) {
+  if ( email !== false  ) {
+    console.log("sending message")
+  }
+}
+
+function initialize_db() {
+  console.log("db initialize called")
+}
+
+/**
+ * When the popup loads, inject a content script into the active tab,
+ * and add a click handler.
+ * If we couldn't inject the script, handle the error.
+*/
+listenForClicks()
+initialize_dashboard()
+
+
+function setup_key_event() {
+  document.addEventListener("change",(ev) => {
+    update_dash_link(ev)
+  })
+}
+
+function update_dash_link(ev) {
+  let email_src = ev.target
+  if ( email_src && (email_src.id === "uemail") ) {
+    let email = email_src.value
+    //alert(email_src.id + " " + email)
+    if ( email && email.length ) {
+      let dash_link = document.getElementById("dashlink")
+      if ( dash_link ) {
+        dash_link.href = `http://localhost:3111/dashboard/${email}`
+      }
+    }
+  }
+}
+
+setup_key_event() 
+
+
+
+async function fetch_user_info(user) { // ---- ---- ---- ---- ---- ---- ---- ----
+  let disp_drop = document.getElementById("user_list")
+  if ( disp_drop ) {
+    let postable = {
+      "cmd" : "user-info",
+      "user" : user
+    }
+    let response = await postData(SERVER_ADMIN_CMD,postable)
+    if ( response.OK === "true" ) {
+      let u_info = response.data
+      let info_loc = document.getElementById("user_list")
+      if ( info_loc ) {
+        info_loc.innerHTML = u_info
+      }
+    }
+  }
+
+}
+
+
+let g_grid_on = false
+let g_last_sort_direction = "priority"
+
+let g_last_shown_list = []
+let g_last_shown_map = {}
+let g_last_list_rendereing = []
+
+
+
+function info_grid(info) {
+  let display_column = []
+  let input = [].concat(info)
+  while ( input.length ) {
+    let row = input.splice(0,11)
+    display_column.push(row.join('&nbsp;'))
+  }
+  let output = display_column.join("</div><div class='word-divs'>")
+  output = "<div class='word-divs'>" + output + "</div>"
+  return output
+}
+
+
+function finally_display(info) {
+  g_last_list_rendering = info
+  let info_loc = document.getElementById("user-data")
+  if ( info_loc ) {
+    if ( !g_grid_on ) {
+      info_loc.innerHTML = info.join("<br>")
+    } else {
+      info_loc.innerHTML = info_grid(info)
+    }
+  }  
+}
+
+function toggle_grid() {
+  g_grid_on = !g_grid_on
+  finally_display(g_last_list_rendering)
+}
+
+
+function sort_list(dir_up) {
+  g_last_sort_direction = dir_up
+  //
+  let url_array = [].concat(g_last_shown_list)
+  if ( dir_up ) {
+    url_array.sort()
+  } else {
+    url_array.sort((a,b) => {
+      if ( a == b ) return 0
+      if ( a < b ) return 1
+      if ( a > b ) return -1
+    })
+  }
+  let info = url_array.map(dom => {
+    return g_last_shown_map[dom]
+  })
+  finally_display(info)
+}
+
+
+function unsort_list() {
+  g_last_sort_direction = "priority"
+  //
+  let url_array = [].concat(g_last_shown_list)
+  let info = url_array.map(dom => {
+    return g_last_shown_map[dom]
+  })
+  finally_display(info)
+}
+
+
+
+
+// BUTTON RESPONSE FOR SHOWING ENTRY CONTENT
+function show_domain_links(doml_str) {
+  let link_spot = document.getElementById("linkcontent-sub")
+  if ( link_spot ) {
+    let url_array = doml_str.split(',')
+    url_array = url_array.map(url => {
+      return `<a href="${url}" target="TABS-COPIOUS-RETRIEVE">${url}</a>`
+    })
+    url_array = url_array.join("<br>")
+    link_spot.innerHTML = url_array
+  }
+}
+
+
+function show_word_links(doml_str) {
+  let link_spot = document.getElementById("linkcontent-sub")
+  if ( link_spot ) {
+    let url_array = doml_str.split(',')
+    url_array = url_array.map(url => {
+      return `<a href="${url}" target="TABS-COPIOUS-RETRIEVE">${url}</a>`
+    })
+    url_array = url_array.join("<br>")
+    link_spot.innerHTML = url_array
+  }
+}
+
+function show_window_links(doml_str) {
+  let link_spot = document.getElementById("linkcontent-sub")
+  if ( link_spot ) {
+    let url_array = doml_str.split(',')
+    url_array = url_array.map(url => {
+      return `<a href="${url}" target="TABS-COPIOUS-RETRIEVE">${url}</a>`
+    })
+    url_array = url_array.join("<br>")
+    link_spot.innerHTML = url_array
+  }
+}
+
+// NEW DATA DISPLAY
+function display_info_list(u_info) {
+  let info = Object.keys(u_info)
+  //
+  g_last_shown_list = [].concat(info)
+  //
+  info = info.map(dom => {
+    let dom_links = u_info[dom].join(',')
+    console.log(dom_links)
+    return `<button onclick="show_domain_links('${dom_links}')">${dom}</button>`
+  })
+  //
+  g_last_shown_map = {}
+  for ( let i = 0; i < info.length; i++ ) {
+    g_last_shown_map[g_last_shown_list[i]] = info[i]
+  }
+  //
+  finally_display(info)
+  //
+  let list_choice = document.getElementById("user-info-id")
+  if ( list_choice ) {
+    list_choice.innerHTML = "domains"
+  }
+}
+
+
+// WINDOW DATA SHAPE IS DIFFERENT 
+async function fetch_user_windows(user) {
+  let disp_drop = document.getElementById("user-data")
+  if ( disp_drop ) {
+    let postable = {
+      "cmd" : "user-windows",
+      "user" : user
+    }
+    let response = await postData(SERVER_ADMIN_CMD,postable)
+    if ( response.OK === "true" ) {
+      let u_info = response.data    /// an array...
+      g_last_shown_list = []
+      let info = u_info.map(window_descr => {
+        let wtabs = window_descr.tabs
+        if ( wtabs ) {
+          wtabs = wtabs.map((ldescr) => {
+            let link = ldescr.url
+            return link
+          })
+          let dom_links = wtabs.join(',')
+          g_last_shown_list.push(window_descr.descr)
+          return `<button onclick="show_window_links('${dom_links}')">${window_descr.descr}</button>`
+        }
+      })
+      // PUT DATA INTO THE DIPSPLAY MAP
+      g_last_shown_map = {}
+      for ( let i = 0; i < info.length; i++ ) {
+        g_last_shown_map[g_last_shown_list[i]] = info[i]
+      }
+      //
+      finally_display(info)
+      //
+      let list_choice = document.getElementById("user-info-id")
+      if ( list_choice ) {
+        list_choice.innerHTML = "windows"
+      }
+    }
+  }
+}
+
+
+// API LEVEL CALLS
+async function fetch_user_domains(user) {
+  let disp_drop = document.getElementById("user-data")
+  if ( disp_drop ) {
+    let postable = {
+      "cmd" : "user-domains",
+      "user" : user
+    }
+    let response = await postData(SERVER_ADMIN_CMD,postable)
+    if ( response.OK === "true" ) {
+      display_info_list(response.data)
+    }
+  }
+}
+
+
+async function fetch_user_topics(user) {
+  let disp_drop = document.getElementById("user-data")
+  if ( disp_drop ) {
+    let postable = {
+      "cmd" : "user-topics",
+      "user" : user
+    }
+    let response = await postData(SERVER_ADMIN_CMD,postable)
+    if ( response.OK === "true" ) {
+      display_info_list(response.data)
+    }
+  }
+}
+
+
+async function fetch_user_words(user) {
+  let disp_drop = document.getElementById("user-data")
+  if ( disp_drop ) {
+    let postable = {
+      "cmd" : "user-words",
+      "user" : user
+    }
+    let response = await postData(SERVER_ADMIN_CMD,postable)
+    if ( response.OK === "true" ) {
+      display_info_list(response.data)
+    }
+  }
+}
+
+
+
+function show_status(msg) {
+  //
+}
+
+
+
+
+fetch_user_info("$$USER_IDENTIFIER")
+
+</script>

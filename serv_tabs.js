@@ -109,8 +109,11 @@ app.get('/dashboard/:id_token', async (req, res) => {
         try {
             let hdata = await fsPromise.readFile("./dashboard/user_tab_manager.html")
             hdata = hdata.toString()
-            hdata = hdata.replace("$$USER_IDENTIFIER",id_token)
-            hdata = hdata.replace("$$USER_IDENTIFIER",id_token)
+            let prev_hdata = ""
+            do {
+                prev_hdata = hdata
+                hdata = hdata.replace("$$USER_IDENTIFIER",id_token)
+            } while ( prev_hdata != hdata )
             res.send(hdata)
         } catch (e) {
             console.log(`failed to load salvage_run.json`)

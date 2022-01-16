@@ -6,7 +6,7 @@ let SERVER_PUT_WINDOW = `http://${CHOSEN_URL}/put_window`
 let SERVER_DOMAIN_POST =  `http://${CHOSEN_URL}/get_domains`
 let SERVER_TOPICS_POST =  `http://${CHOSEN_URL}/get_topics`
 let SERVER_TOPIC_TABS_POST = `http://${CHOSEN_URL}/get_topic_tabs`
-let SERVER_TOPIC_LINKS_POST = `http://${CHOSEN_URL}/get_link_package`
+let SERVER_TOPIC_LINKS_POST = `http://${CHOSEN_URL}/get_link_meta`
 let SERVER_WINDOW_POST =  `http://${CHOSEN_URL}/get_windows`
 let SERVER_WINDOW_CLEAR =  `http://${CHOSEN_URL}/clear`
 let SERVER_WINDOW_UNDO =  `http://${CHOSEN_URL}/undo`
@@ -225,9 +225,9 @@ function logTopic(topic_tables,topics,without_filter,click_context) {
       store_it = document.createElement('button')
       store_it.addEventListener('click',((tf) => {
         return(async (ev) => {
-          let link_package = await fetch_topic_link_package(tf,click_context)              // FETCH TOPIC fetch_topic, From a link to the server
-          if ( link_package ) {
-            inject_topic_into_dashboard(tf,link_package)
+          let link_meta = await fetch_topic_link_meta(tf,click_context)              // FETCH TOPIC fetch_topic, From a link to the server
+          if ( link_meta ) {
+            inject_topic_into_dashboard(tf,link_meta)
           } else {
             console.log("no link package for ")
           }
@@ -492,7 +492,7 @@ async function do_op(op) {
 
 // ---- ---- ---- ---- ---- ---- ----
 //
-async function fetch_topic_link_package(topic,click_context) {
+async function fetch_topic_link_meta(topic,click_context) {
   try {
     let email_in = document.getElementById('uemail')
     if ( email_in ) {
@@ -695,12 +695,12 @@ async function initialize_dashboard() {
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 //
-function inject_topic_into_dashboard(package_name,link_package) {
+function inject_topic_into_dashboard(package_name,link_meta) {
   let send_topics = (tabs) => {
-    console.log(link_package)
+    console.log(link_meta)
     copious.tabs.sendMessage(
       tabs[0].id,
-      { "command" : "topics", "topics_or_domains" : link_package, "package_name" : package_name  }
+      { "command" : "topics", "topics_or_domains" : link_meta, "package_name" : package_name  }
     ).catch(reportError);
   }
   if ( g_application_mail && g_application_mail.length ) {
@@ -855,7 +855,7 @@ function initialize_domain_api(domain) {
   SERVER_DOMAIN_POST =  `http://${CHOSEN_URL}/get_domains`
   SERVER_TOPICS_POST =  `http://${CHOSEN_URL}/get_topics`
   SERVER_TOPIC_TABS_POST = `http://${CHOSEN_URL}/get_topic_tabs`
-  SERVER_TOPIC_LINKS_POST = `http://${CHOSEN_URL}/get_link_package`
+  SERVER_TOPIC_LINKS_POST = `http://${CHOSEN_URL}/get_link_meta`
   SERVER_WINDOW_POST =  `http://${CHOSEN_URL}/get_windows`
   SERVER_WINDOW_CLEAR =  `http://${CHOSEN_URL}/clear`
   SERVER_WINDOW_UNDO =  `http://${CHOSEN_URL}/undo`

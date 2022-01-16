@@ -3,7 +3,7 @@ const path = require('path')
 const express = require('express')
 const cors =  require('cors')
 //
-const {link_package_from} = require('./lib/link-package-app')
+const {link_meta_from} = require('./lib/link-meta-app')
 const admin = require('./lib/admin')
 //
 
@@ -171,7 +171,9 @@ app.post('/admin/:id_token', async (req, res) => {
         let result = "false"
         if ( body.cmd ) {
             data = admin.command(body.cmd,body)
-            return(res.status(200).send(JSON.stringify({ 'type' : 'admin', 'OK' : "true", "data" : data })));
+            if ( data ) {
+                return(res.status(200).send(JSON.stringify({ 'type' : 'admin', 'OK' : "true", "data" : data })));
+            }
         }
         return(res.status(200).send(JSON.stringify({ 'type' : 'admin', 'OK' : result })));
     } else {
@@ -305,7 +307,7 @@ app.post('/get_topic_tabs/:which_topic', (req, res) => {
         }
         //
         if ( topic_list !== undefined ) {
-            let link_meta = link_package_from(topic_list,topic,body.email)   // construct a link package 
+            let link_meta = link_meta_from(topic_list,topic,body.email)   // construct a link package 
             return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true', 'data' : link_meta })));
         }
     } else {
@@ -317,7 +319,6 @@ app.post('/get_topic_tabs/:which_topic', (req, res) => {
     //  fail
     return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'false' })));
 })
-
 
 
 //
@@ -339,8 +340,6 @@ app.post('/get_topics',(req, res) => {
     return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'true', 'data' : g_topic_list })));
     //
 })
-
-
 
 
 //
@@ -380,11 +379,11 @@ app.post('/get_windows',(req, res) => {
 
 
 //
-// /get_link_package/:which_topic - GET PACKAGE CONSTRUCT FOR PLACEMENT IN DASHBOARDS HOSTING LINK PACKAGES
+// /get_link_meta/:which_topic - GET PACKAGE CONSTRUCT FOR PLACEMENT IN DASHBOARDS HOSTING LINK PACKAGES
 //
 //  // called in extension -- path:>> server -> extension -> dashboard (on user click)
 //
-app.post('/get_link_package/:which_topic', (req, res) => {
+app.post('/get_link_meta/:which_topic', (req, res) => {
     //
     let body = req.body;
     let topic = req.params.which_topic
@@ -469,7 +468,6 @@ if ( process.argv.length > 2 ) {
 if ( process.argv.length > 3 ) {
     g_admin_id = process.argv[3]
 }
-
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)

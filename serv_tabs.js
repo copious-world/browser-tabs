@@ -63,8 +63,6 @@ let g_all_domains = {
 }
 
 
-
-// ---- ---- ---- ---- ---- ---- ---- ---- ----
 // ---- ---- ---- ---- ---- ---- ---- ---- ----
 // ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -79,9 +77,6 @@ async function load_topics_and_domains() {
 }
 
 
-
-
-// ---- ---- ---- ---- ---- ---- ---- ---- ----
 // ---- ---- ---- ---- ---- ---- ---- ---- ----
 // ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -167,6 +162,26 @@ app.post('/admin/:id_token', async (req, res) => {
     }
     //
     if ( g_admin_id === id_token ) {
+        let body = req.body
+        let result = "false"
+        if ( body.cmd ) {
+            data = admin.command(body.cmd,body)
+            if ( data ) {
+                return(res.status(200).send(JSON.stringify({ 'type' : 'admin', 'OK' : "true", "data" : data })));
+            }
+        }
+        return(res.status(200).send(JSON.stringify({ 'type' : 'admin', 'OK' : result })));
+    } else {
+        res.send('Hello You have encountered the copious.world tab server.... open to the public...')
+    }
+})
+
+
+app.post('/user/:id_token', async (req, res) => {
+    let id_token = req.params['id_token']
+    let uid = req.body.user
+    //
+    if ( uid === id_token ) {
         let body = req.body
         let result = "false"
         if ( body.cmd ) {

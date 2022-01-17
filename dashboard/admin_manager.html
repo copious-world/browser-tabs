@@ -66,11 +66,11 @@ button {
 }
 
 
-.wulist {
+.ml_plugin {
   background-color: #11531f;
   color: white;
 }
-.wulist:hover {
+.ml_plugin:hover {
   background-color: #cfeeee;
   color:#11531f
 }
@@ -224,9 +224,10 @@ button {
       <div style="background-color: blanchedalmond;padding: 4px;border: 1px solid rgb(82, 9, 82)">
         <div style="height:38;display:inline-block">
           <button class="help_getter" style="background-color:rgb(245, 255, 236);font-weight: bolder;font-size: larger;box-shadow: lightgoldenrodyellow;border-radius: 50%;">?</button>
-          <button class="wulist" >ulist Window Tabs</button>
+          <button class="ml_plugin" >Plugin management</button>
+          <!--
           <button class="wsaver" >Save Window</button>
-          <button class="wgetter" >Retrieve Windows</button>
+          <button class="wgetter" >Retrieve Windows</button>-->
       </div>
       </div>
       <input id="all_tabs" type="hidden" value="" >
@@ -239,13 +240,15 @@ button {
 
    <!-- Tab links -->
   <div class="tab">
-    <button id="pick-ulisted_tabs" class="tablinks active" >ulisted</button>
-    <button id="pick-requested_topics" class="tablinks" >Topics</button>
+    <button id="pick-ulisted_tabs" class="tablinks active" >User Information</button>
+    <button id="pick-admin_plugins" class="tablinks" >Plugin Admin</button>
+    <!--
     <button id="pick-requested_clusters" class="tablinks" >Clustering</button>
     <button id="pick-requested_domains" class="tablinks" >Domains</button>
     <button id="pick-window_ulisted" class="tablinks" >This Window Tabs</button>
     <button id="pick-requested_windows" class="tablinks" >Windows</button>
     <button id="pick-requested_help" class="tablinks" >Help</button>
+    -->
   </div>
 
   <div id="ulisted_tabs" class="tabcontent" style="display: block;" >
@@ -303,11 +306,10 @@ button {
   </div>
 
 
-  <div id="requested_domains" class="tabcontent" >
-    <h4>List of Stored Topics</h4> 
-    <div style="max-width: 300px">Click on <b>Retrieve Domains</b> to see all of the topics found in the tabs that you previously saved.</div>
-    <ul id="domain_list">
-        
+  <div id="admin_plugins" class="tabcontent" >
+    <h4>Manage Plugins For ML/NLU</h4> 
+    <ul id="plugin_manager">
+      <li>default</li>
     </ul>
   </div>
  
@@ -853,11 +855,10 @@ function listenForClicks() {
         let target =  document.getElementById("pick-requested_topics")
         openResults(target, "requested_topics")
         save_everything()
-      } else if ( e.target.classList.contains("wulist") ) {
-        await ulist_window_tabs()
-        let target =  document.getElementById("pick-window_ulisted")
-        openResults(target, "window_ulisted")
-        save_everything()
+      } else if ( e.target.classList.contains("ml_plugin") ) {
+        // Plugin admin...
+        let target =  document.getElementById("pick-admin_plugins")
+        openResults(target, "admin_plugins")
       } else if ( e.target.classList.contains("wsaver") ) {
         save_window()
         let target =  document.getElementById("pick-window_ulisted")

@@ -79,20 +79,47 @@ button {
 
 
 .wgetter {
-  background-color: #FBFBC9;
+  background-color: #fbefc9;
 }
 .wgetter:hover {
-  background-color: #EAEA9D;
+  background-color: #ffff90;
+}
+
+
+.fun-click-magic {
+  background-color: #f7f0d8;
+  border:#064614 solid 1px;
+  color: rgb(131, 148, 106);
+}
+
+.fun-click-magic:hover {
+  background-color: #fada9f;
+  border:#3c3068 solid 1px;
+  color: rgb(14, 241, 101);
 }
 
 
 .dashboard_getter {
+  margin: 3% auto;
+  padding: 4px;
+  text-align: center;
+  font-size: 1.5em;
+  cursor: pointer;
+  
+  border: solid 1px black;
   background-color: #FBFBC9;
   color:#064614;
 }
 .dashboard_getter:hover {
-  background-color: #f0e19e;
-  color:#053a10;
+  margin: 3% auto;
+  padding: 4px;
+  text-align: center;
+  font-size: 1.5em;
+  cursor: pointer;
+
+  border: solid 1px black;
+  background-color: #ffe56f;
+  color:#960d03;
 }
 
 
@@ -101,8 +128,8 @@ button {
   color:#064614;
 }
 .help_getter:hover {
-  background-color: #EAEA9D;
-  color:#064614;
+  background-color: #ffe56f;
+  color:#960d03;
 }
 
 .do_clear {

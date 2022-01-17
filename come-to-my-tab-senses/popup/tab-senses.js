@@ -1,20 +1,34 @@
-
-const SERVER_PUT_TABS = "http://localhost:3111/put_tabs"
-const SERVER_PUT_WINDOW = "http://localhost:3111/put_window"
-const SERVER_DOMAIN_POST =  "http://localhost:3111/get_domains"
-const SERVER_TOPICS_POST =  "http://localhost:3111/get_topics"
-const SERVER_TOPIC_TABS_POST = "http://localhost:3111/get_topic_tabs"
-const SERVER_TOPIC_LINKS_POST = "http://localhost:3111/get_link_package"
-const SERVER_WINDOW_POST =  "http://localhost:3111/get_windows"
-const SERVER_WINDOW_CLEAR =  "http://localhost:3111/clear"
-const SERVER_WINDOW_UNDO =  "http://localhost:3111/undo"
+let DEFAULT_URL = 'localhost:3111'
+let CHOSEN_URL = DEFAULT_URL
+//
+let SERVER_PUT_TABS = `http://${CHOSEN_URL}/put_tabs`
+let SERVER_PUT_WINDOW = `http://${CHOSEN_URL}/put_window`
+let SERVER_DOMAIN_POST =  `http://${CHOSEN_URL}/get_domains`
+let SERVER_TOPICS_POST =  `http://${CHOSEN_URL}/get_topics`
+let SERVER_TOPIC_TABS_POST = `http://${CHOSEN_URL}/get_topic_tabs`
+let SERVER_TOPIC_LINKS_POST = `http://${CHOSEN_URL}/get_link_meta`
+let SERVER_WINDOW_POST =  `http://${CHOSEN_URL}/get_windows`
+let SERVER_WINDOW_CLEAR =  `http://${CHOSEN_URL}/clear`
+let SERVER_WINDOW_UNDO =  `http://${CHOSEN_URL}/undo`
+//
+let SERVER_SELECT_SERVER =  `http://${CHOSEN_URL}/select-host`
 
 
 const DEFAULT_CLICK_CONTEXT = "domains"
+const DEBUGGING = true
 
-let g_application_mail = false
+
+const copious = browser
 
 
+// -- g_application_mail    --- set by web page (not by extension)
+let g_application_mail = false      // set by a dashboard specific to a user session
+
+// NOTE: if g_application_mail has a value, then buttons made for communicating with topic list elements and the dashboard are shown
+//
+
+// g_keep_data_around
+// Shorten the trip to the server
 let g_keep_data_around = {
   "windows" : "nada",
   "topics" : "nada",
@@ -60,6 +74,9 @@ async function postData(url = '', data = {}, creds = 'omit', do_stringify = true
     try {
       return await response.json(); // parses JSON response into native JavaScript objects
     } catch (e) {
+      alert("parse json")
+      alert(e)
+      alert(response)
       console.log(e)
       console.log(response)
       return({})
@@ -76,6 +93,13 @@ function reportError(error) {
   console.error(`Could not come to my tab senses: ${error}`);
 }
 
+
+function debug(msg) {
+  let help_field = document.getElementById("help_display")
+  if ( help_field ) {
+    help_field.innerHTML += '<br>' + msg
+  }
+}
 
 
 
@@ -141,41 +165,12 @@ function tab_gather(tabs,tabs_stored,list_loc) {
 }
 
 
-// ---- ---- ---- ---- ---- ---- ----
 //
-async function do_op(op) {
-  try {
-    let email_in = document.getElementById('uemail')
-    if ( email_in ) {
-        let email = email_in.value
-        if ( email.length ) {
-            let postable = {
-                "email" : email,
-                "op" : op
-            }
-            try {
-              let response = await postData(SERVER_TOPIC_TABS_POST + topic,postable)
-              if ( response.OK === "true" ) {
-                return
-              }
-            } catch (e) {
-              alert(e)
-            }
-            return
-        } else {
-            alert("your account email is required")
-        }
-    }
-  } catch(e) {
-      alert(e)
-  }
-}
-
-
-
+// gather_tabs
+//  -- gather all tabs... all windows open
 function gather_tabs() {
   return new Promise ((resolve,reject) => {
-    browser.tabs.query({})
+    copious.tabs.query({})
     .then((tabs) => { tab_gather(tabs,'all_tabs','tab_list'); resolve(true); })
     .catch(
       (err) => { reportError(err); reject(err) }
@@ -183,10 +178,11 @@ function gather_tabs() {
   })
 }
 
-
+// gather_window_tabs
+// -- specifically request tabs from the current window
 function gather_window_tabs() {
   return new Promise ((resolve,reject) => {
-    browser.tabs.query({ 'currentWindow': true })
+    copious.tabs.query({ 'currentWindow': true })
     .then((tabs) => { tab_gather(tabs,'window_tabs','window_tab_list'); resolve(true); })
     .catch(
       (err) => { reportError(err); reject(err) }
@@ -198,13 +194,15 @@ function gather_window_tabs() {
 // // // // // // // // // // // // // // // // // // //
 
 
-
+// logTopic
+// show the list of tabs or domains as buttons with responses made for opening them again
+// or for puting them into a dashboard for use.
 function logTopic(topic_tables,topics,without_filter,click_context) {
 
-  g_keep_data_around[click_context] = topics
+  g_keep_data_around[click_context] = topics    // keep local memory of satisfied requests
 
   topic_tables.innerHTML = ""
-  for (let topic of topics) {   // these are links determined by the server; the links are to groups of tabs
+  for ( let topic of topics ) {   // these are links determined by the server; the links are to groups of tabs
     let tabs_finder = topic.link
     //
     if ( click_context === undefined ) {
@@ -213,43 +211,46 @@ function logTopic(topic_tables,topics,without_filter,click_context) {
     //
     let element = document.createElement('li')
     let btn = document.createElement('button')
-    btn.addEventListener('click',((tf) => {
+    //
+    //
+    btn.addEventListener('click',((tf) => {  // the button that is always shown (with or without dashboard)
         return((ev) => {
-          fetch_topic(tf,without_filter)              // FETCH TOPIC fetch_topic, From a link to the server
+          fetch_topic(tf,without_filter,click_context)              // FETCH TOPIC fetch_topic, From a link to the server
         })
       })(tabs_finder))
     //
     let store_it = false
-    if ( g_application_mail !== false && g_application_mail && g_application_mail.length ) {
-        store_it = document.createElement('button')
-        store_it.addEventListener('click',((tf) => {
-          return(async (ev) => {
-            let link_package = await fetch_topic_link_package(tf,click_context)              // FETCH TOPIC fetch_topic, From a link to the server
-            if ( link_package ) {
-              inject_topic_into_dashboard(tf,link_package)
-            } else {
-              console.log("no link package for ")
-            }
-          })
-        })(tabs_finder))
-      }
+    if ( (g_application_mail !== false) && g_application_mail && g_application_mail.length ) {
       //
-      if ( store_it !== false && store_it ) {
-        element.appendChild(store_it)
-        store_it.innerHTML = "&#8595;"
-      }
-
-      if ( topic.count !== undefined ) {
-        let counter = document.createElement('span')
-        counter.className = "counter_box"
-        counter.innerHTML = topic.count
-        element.appendChild(counter)
-      }
-
-      element.appendChild(btn)
-      btn.innerHTML = topic.descr
-      topic_tables.appendChild(element)
+      store_it = document.createElement('button')
+      store_it.addEventListener('click',((tf) => {
+        return(async (ev) => {
+          let link_meta = await fetch_topic_link_meta(tf,click_context)              // FETCH TOPIC fetch_topic, From a link to the server
+          if ( link_meta ) {
+            inject_topic_into_dashboard(tf,link_meta)
+          } else {
+            console.log("no link package for ")
+          }
+        })
+      })(tabs_finder))
     }
+    //
+    if ( store_it !== false && store_it ) {
+      element.appendChild(store_it)
+      store_it.innerHTML = "&#8595;"
+    }
+
+    if ( topic.count !== undefined ) {
+      let counter = document.createElement('span')
+      counter.className = "counter_box"
+      counter.innerHTML = topic.count
+      element.appendChild(counter)
+    }
+
+    element.appendChild(btn)
+    btn.innerHTML = topic.descr
+    topic_tables.appendChild(element)
+  }
 }
 
 
@@ -290,9 +291,12 @@ async function retrieve_tab_topics(post_channel,result_location,without_filter,c
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 //
 function spawn_if_new_tabs(tabs,data) {
-  for ( let url of data ) {
+  let links = JSON.parse(data.package)
+  //debug(`spawn_if_new_tabs  : ${ data.links } ${typeof data.links }`)
+  for ( let url of links._links ) {
+    //alert(url)
     if ( tabs.find((atab) => { return(atab.url === url) }) === undefined ) {
-      browser.tabs.create({
+      copious.tabs.create({
         "url": url
       });
     }
@@ -300,15 +304,23 @@ function spawn_if_new_tabs(tabs,data) {
 }
 
 
-function spawn_tabs(data,without_filter) {
+function spawn_one_tab(data) {
+  let links = JSON.parse(data.package)
+  for ( let url of links._links ) {
+    copious.tabs.create({
+      "url": url
+    });
+  }
+
+}
+
+
+function spawn_tabs(search_result,without_filter) {
+  let data = (typeof search_result.result === "string") ? JSON.parse(search_result.result) : search_result
   if ( without_filter ) {
-    for ( let url of data ) {   // create tabs and don't check to see if it is there
-      browser.tabs.create({
-        "url": url
-      });
-    }
+    spawn_one_tab(data)
   } else {
-    browser.tabs.query({})     // query current tabs and lonly open ones not currenly open.
+    copious.tabs.query({})     // query current tabs and only open ones not currenly open.
       .then((tabs) => { spawn_if_new_tabs(tabs,data) })
       .catch(reportError);
   }
@@ -395,7 +407,7 @@ let cluster_points = get_cluster_point_list()
 
 
 async function save_window() {
-  browser.tabs.query({ 'currentWindow': true })
+  copious.tabs.query({ 'currentWindow': true })
       .then((tabs) => {
         tab_gather(tabs,'window_tabs','window_tab_list')
         tab_field_saver('window_tab_list',SERVER_PUT_WINDOW)
@@ -413,23 +425,25 @@ async function save_window() {
 
 
 
-
 // ---- ---- ---- ---- ---- ---- ----
 //
-async function fetch_topic(topic,without_filter) {
+async function fetch_topic(topic,without_filter,context) {
   try {
     let email_in = document.getElementById('uemail')
     if ( email_in ) {
         let email = email_in.value
         if ( email.length ) {
             let postable = {
-                "email" : email
+                "email" : email,
+                "context" : context                
             }
             try {
               let response = await postData(SERVER_TOPIC_TABS_POST + topic,postable)
               if ( response.OK === "true" ) {
                   let data = response.data
                   spawn_tabs(data,without_filter)       // given a group of tabs has been returned, open the tabs in the current window.
+              } else {
+                alert("no tab response")
               }
             } catch (e) {
               alert(e)
@@ -447,7 +461,38 @@ async function fetch_topic(topic,without_filter) {
 
 // ---- ---- ---- ---- ---- ---- ----
 //
-async function fetch_topic_link_package(topic,click_context) {
+async function do_op(op) {
+  try {
+    let email_in = document.getElementById('uemail')
+    if ( email_in ) {
+        let email = email_in.value
+        if ( email.length ) {
+            let postable = {
+                "email" : email,
+                "op" : op
+            }
+            try {
+              let response = await postData(SERVER_TOPIC_TABS_POST + topic,postable)
+              if ( response.OK === "true" ) {
+                return
+              }
+            } catch (e) {
+              alert(e)
+            }
+            return
+        } else {
+            alert("your account email is required")
+        }
+    }
+  } catch(e) {
+      alert(e)
+  }
+}
+
+
+// ---- ---- ---- ---- ---- ---- ----
+//
+async function fetch_topic_link_meta(topic,click_context) {
   try {
     let email_in = document.getElementById('uemail')
     if ( email_in ) {
@@ -480,6 +525,7 @@ async function fetch_topic_link_package(topic,click_context) {
 
 // DISPLAY STYLING...
 //
+//    show the (navigation) tab with the tab specific list results
 function openResults(currentTarget, tabName) {
   // Declare all variables
   let tabcontent, tablinks;
@@ -513,7 +559,8 @@ function listenForClicks() {
         openResults(target, "gathered_tabs")
         save_everything()
       } else if ( e.target.classList.contains("getter") ) {
-        await retrieve_tab_topics(SERVER_TOPICS_POST,"topic_list",false,"topics")    // retrieve all tabs last stored into the server...
+        let no_filter = false
+        await retrieve_tab_topics(SERVER_TOPICS_POST,"topic_list",no_filter,"topics")    // retrieve all tabs last stored into the server...
         let target =  document.getElementById("pick-requested_topics")
         openResults(target, "requested_topics")
         save_everything()
@@ -545,7 +592,7 @@ function listenForClicks() {
         let target =  document.getElementById("pick-window_gathered")
         openResults(target, "window_gathered") 
         save_everything()
-      } else if ( e.target.classList.contains("wgetter") ) {
+      } else if ( e.target.classList.contains("wgetter") ) {  // this has a filter
         await retrieve_tab_topics(SERVER_WINDOW_POST,"window_list",true,"windows")   // retrieve links to window tab sets ... tabs last stored into server...
         let target =  document.getElementById("pick-requested_windows")
         openResults(target, "requested_windows")
@@ -567,6 +614,7 @@ function listenForClicks() {
       } else if ( e.target.classList.contains("undo") ) {
         do_op("undo")
       }
+      //
     } catch (err) {
         
     }
@@ -587,7 +635,9 @@ function reportExecuteScriptError(error) {
 // ---- ---- ---- ---- ---- ---- ----
 //
 async function show_help() {
-  let help_url = browser.runtime.getURL("docs/help.html");
+  if ( DEBUGGING ) return
+  //
+  let help_url = copious.runtime.getURL("docs/help.html");
   let options = {
     method: 'GET', // *GET, POST, PUT, DELETE, etc.
   }
@@ -603,57 +653,58 @@ async function show_help() {
 // ---- ---- ---- ---- ---- ---- ----
 //
 function hide_help() {
+  if ( DEBUGGING ) return
+  //
   let help_field = document.getElementById("help_display")
   if ( help_field ) {
-    help_field.innerHTML = ""
+    //help_field.innerHTML = ""
   }
 }
 
 // ---- ---- ---- ---- ---- ---- ----
 //
-function initialize_dashboard() {
+async function initialize_dashboard() {
   //
-  console.log("initiaize")
-
   initialize_db()
 
   g_application_mail = false
   //
-  let initializer = (tabs) => {
-    browser.tabs.sendMessage( tabs[0].id, { "command" : "initial" })
-    .then( response => {
-        g_application_mail = false  // reset 
-        //
-        let mail = response.user_email
-        if ( mail && mail.length ) {
-          g_application_mail = mail
-          let user_mail = document.getElementById('uemail')
-          user_mail.value = mail
-          load_previous(g_application_mail)
-          //
-        }
-        //
-    }).catch(reportError);
+  try {
+    let queryOptions = { active: true, currentWindow: true };
+    let tabs = await copious.tabs.query(queryOptions);
+    let response = await copious.tabs.sendMessage( tabs[0].id, { "command" : "initial" })
+    if ( response ) {
+      g_application_mail = false  // reset 
+      //
+      let mail = response.user_email
+      if ( mail && mail.length ) {
+        g_application_mail = mail
+        let user_mail = document.getElementById('uemail')
+        user_mail.value = mail
+        load_previous(g_application_mail)
+      }
+      //
+    }
+    //initializer(tabs)
+  } catch (e) {
+    reportError(e)
   }
-  //
-  console.log("initiaize")
-  browser.tabs.query({active: true, currentWindow: true}).then(initializer)
-  .catch(reportError);
   //
 }
 
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 //
-function inject_topic_into_dashboard(package_name,link_package) {
+function inject_topic_into_dashboard(package_name,link_meta) {
   let send_topics = (tabs) => {
-    browser.tabs.sendMessage(
+    console.log(link_meta)
+    copious.tabs.sendMessage(
       tabs[0].id,
-      { "command" : "topics", "topics_or_domains" : link_package, "package_name" : package_name  }
+      { "command" : "topics", "topics_or_domains" : link_meta, "package_name" : package_name  }
     ).catch(reportError);
   }
   if ( g_application_mail && g_application_mail.length ) {
-    browser.tabs.query({active: true, currentWindow: true}).then(send_topics)
+    copious.tabs.query({active: true, currentWindow: true}).then(send_topics)
     .catch(reportError);  
   }
 }
@@ -676,14 +727,14 @@ function save_everything() {
     }
     console.log("save_everything::  " + data_to_save)
     //
-    browser.runtime.sendMessage(storage_record)
+    copious.runtime.sendMessage(storage_record)
   }
 }
   
 function delete_everything() {
   let email = g_application_mail
   if ( email ) {
-    browser.runtime.sendMessage({
+    copious.runtime.sendMessage({
         "command": 'delete',
         "email": email
     })
@@ -694,8 +745,7 @@ function delete_everything() {
 
 function load_previous(email) {
   if ( email !== false  ) {
-    console.log("sending message")
-    browser.runtime.sendMessage({
+    copious.runtime.sendMessage({
       "command": 'get',
       "email": email
     }).then( response => {
@@ -753,13 +803,137 @@ function load_previous(email) {
   }
 }
 
+
+
+// INITIALIZE OBJECT IN THE BACKGROUND SCRIPT  --- when the interface is ready
 function initialize_db() {
-  browser.runtime.sendMessage({
+  copious.runtime.sendMessage({
     "command": 'db-initial'
   })
-
-  console.log("db initialize called")
 }
+
+async function save_store_domain(domain) {
+  let will_store = copious.storage.sync.set({"server_domain_host" : domain})
+  try {
+      let did_store = await will_store
+      console.log(did_store)
+  } catch (e) {
+      console.log(e.message)
+  }
+
+}
+
+
+function setup_domain_change_access() {
+  let changer = document.getElementById("tab-service-changer")
+  if ( changer ) {
+    changer.addEventListener('click',(ev) => {
+      let init_control_1 = document.getElementById("show_on_init_1")
+      let init_control_2 = document.getElementById("show_on_init_2")
+      init_control_1.style.display = "none"
+      init_control_2.style.display = "none"
+      let domain_chooser = document.getElementById("dont_show_if_setup")
+      domain_chooser.style.display = "block"
+      setup_select_host_options()
+    })
+  }
+}
+
+function initialize_domain_api(domain) {
+  //
+  let init_control_1 = document.getElementById("show_on_init_1")
+  let init_control_2 = document.getElementById("show_on_init_2")
+  init_control_1.style.display = "block"
+  init_control_2.style.display = "block"
+  let domain_chooser = document.getElementById("dont_show_if_setup")
+  domain_chooser.style.display = "none"
+  //
+  let CHOSEN_URL = domain
+  //
+  SERVER_PUT_TABS = `http://${CHOSEN_URL}/put_tabs`
+  SERVER_PUT_WINDOW = `http://${CHOSEN_URL}/put_window`
+  SERVER_DOMAIN_POST =  `http://${CHOSEN_URL}/get_domains`
+  SERVER_TOPICS_POST =  `http://${CHOSEN_URL}/get_topics`
+  SERVER_TOPIC_TABS_POST = `http://${CHOSEN_URL}/get_topic_tabs`
+  SERVER_TOPIC_LINKS_POST = `http://${CHOSEN_URL}/get_link_meta`
+  SERVER_WINDOW_POST =  `http://${CHOSEN_URL}/get_windows`
+  SERVER_WINDOW_CLEAR =  `http://${CHOSEN_URL}/clear`
+  SERVER_WINDOW_UNDO =  `http://${CHOSEN_URL}/undo`
+
+  setup_domain_change_access()
+}
+
+async function initialize_domain_ready() {
+  //
+  let init_control_1 = document.getElementById("show_on_init_1")
+  let init_control_2 = document.getElementById("show_on_init_2")
+  init_control_1.style.display = "none"
+  init_control_2.style.display = "none"
+  //
+  let gettingItem = copious.storage.sync.get("server_domain_host");
+  try {
+    let domain_def_record = await gettingItem
+    if ( domain_def_record ) {
+      if ( Object.keys(domain_def_record).length === 0 ) {
+        let domain_chooser = document.getElementById("dont_show_if_setup")
+        domain_chooser.style.display = "block"
+        setup_select_host_options()
+      } else {
+        let domain_chooser = document.getElementById("dont_show_if_setup")
+        domain_chooser.style.display = "none"
+        //let email = email_record.email
+        let domain = domain_def_record.server_domain_host
+        initialize_domain_api(domain)
+      }
+    }
+    //
+  } catch (e) {
+    alert(e.message)
+  }
+  //
+}
+
+
+
+function initialize_user_interface() {
+  initialize_domain_ready()
+  copious.runtime.sendMessage({
+    "command": 'interface-initialize'
+  })
+}
+
+
+async function do_interface_from_storage() {
+  let gettingItem = copious.storage.sync.get("email");
+  try {
+      let email_record = await gettingItem
+      if ( email_record ) {
+          if ( Object.keys(email_record).length === 0 ) {
+            alert("EMPTY INTERFACE")
+          } else {
+            let email = email_record.email
+            let email_in = document.getElementById('uemail')
+            if ( email_in ) {
+              email_in.value = email
+              //
+              if ( email.length ) {
+                let dash_link = document.getElementById("dashlink")
+                if ( dash_link ) {
+                  dash_link.href = `http://${CHOSEN_URL}/dashboard/${email}`
+                } else {
+                  alert("no dash")
+                }
+              }
+              //
+            }
+          }
+      }
+  } catch (e) {
+    alert(e.message)
+  }
+}
+
+
 
 /**
  * When the popup loads, inject a content script into the active tab,
@@ -768,7 +942,9 @@ function initialize_db() {
 */
 listenForClicks()
 initialize_dashboard()
-
+initialize_user_interface()
+do_interface_from_storage()
+//
 
 function setup_key_event() {
   document.addEventListener("change",(ev) => {
@@ -784,10 +960,57 @@ function update_dash_link(ev) {
     if ( email && email.length ) {
       let dash_link = document.getElementById("dashlink")
       if ( dash_link ) {
-        dash_link.href = `http://localhost:3111/dashboard/${email}`
+        dash_link.href = `http://${CHOSEN_URL}/dashboard/${email}`
       }
+      // ALSO CHANGE THE STORAGE AS TO WHO THE USER IS
+      copious.runtime.sendMessage({
+        "command": 'email-update',
+        "email" : email
+      })
+    
     }
   }
 }
 
+
+function setup_select_host_options() {
+  let option_button = document.getElementById('select-host')
+  if ( option_button ) {
+    option_button.addEventListener('click',async (ev) => {
+      let option_box = document.getElementById('select-host-options')
+      let domain = option_box.value
+      let postable = {
+        "domain" : domain
+      }
+      try {
+        let post_channel = SERVER_SELECT_SERVER
+        let response = await postData(post_channel,postable)
+        if ( response.OK === "true" ) {
+          //
+          let data = response.data
+          //
+          //show_on_init_2
+          let init_control_1 = document.getElementById("show_on_init_1")
+          let init_control_2 = document.getElementById("show_on_init_2")
+          init_control_1.style.display = "block"
+          init_control_2.style.display = "block"
+          let domain_chooser = document.getElementById("dont_show_if_setup")
+          domain_chooser.style.display = "none"
+          //
+          initialize_domain_api(domain)
+          save_store_domain(CHOSEN_URL)
+          //
+        }
+      } catch (e) {
+        alert(e.message)
+      }
+    })
+  }
+  //
+}
+
+
 setup_key_event() 
+
+
+

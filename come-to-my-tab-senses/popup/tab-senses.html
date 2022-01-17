@@ -4,11 +4,12 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="tab-senses.css"/>
   </head>
-
+  <script type="application/javascript" src="browser-polyfill.min.js"></script>
 <body>
   <div id="popup-content">
     <div style="background-color: blanchedalmond;padding: 4px;border: 1px solid rgb(82, 9, 82)">
-      <div style="width:38;height:38;display:inline-block">
+      <div style="width:100%;height:38px;display:inline-block;vertical-align: middle;padding-bottom: 6px;">
+        <div style="width:38px;height:38px;display:inline-block">
         <a class="nav-link" href="http://www.copious.world" target="COPIOUS">
             <svg version="1.0" width="38" height="38" viewBox="0 0 250 250" preserveAspectRatio="xMidYMid meet" id="logo" >
               <defs id="defs10"/>
@@ -20,128 +21,139 @@
               <text xml:space="preserve" style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:28.53204727px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" x="90" y="175.07523" id="text4165" transform="scale(0.90874022,1.1004245)"><tspan id="tspan4167" x="90" y="175.07523">opious</tspan></text>
             </svg>
         </a>
+        </div>
+        <div style="float:right;margin-right: 5%;">
+        <button class="help_getter" style="font-weight: bolder;font-size: larger;box-shadow: lightgoldenrodyellow;border-radius: 50%;">?</button>
+        <a id="dashlink" href="http://localhost:3111/dashboard/pad@fad.com" class="dashboard_getter" style="font-weight: bolder;font-size: larger;box-shadow: lightgoldenrodyellow;" target="COPIOUS-TABS-DASH">dashboard</a>
+        </div>
       </div>
-      <div style="height:38;display:inline-block">
-        <button class="gather" >Gather Tabs</button>
-        <button class="saver" >Save Tabs</button>
-        <button class="getter" >Retrieve Topics</button>        
-        <button class="dgetter" >Retrieve Domains</button>        
+
+      <div id="show_on_init_1" >
+        <div style="height:38px;display:inline-block">
+          <button class="gather" >Gather Tabs</button>
+          <button class="saver" >Save Tabs</button>
+          <button class="getter" >Retrieve Topics</button>
+          <button class="dgetter" >Retrieve Domains</button>        
+        </div>
+        <div style="background-color: blanchedalmond;padding: 4px;border: 1px solid rgb(82, 9, 82)">
+          <div style="height:38px;display:inline-block">
+            <button class="wgather" >Gather Window Tabs</button>
+            <button class="wsaver" >Save Window</button>
+            <button class="wgetter" >Retrieve Windows</button>
+        </div>
+        </div>
+        <input id="all_tabs" type="hidden" value="" >
+        <input id="window_tabs" type="hidden" value="" >
       </div>
-      <div style="background-color: blanchedalmond;padding: 4px;border: 1px solid rgb(82, 9, 82)">
-        <div style="height:38;display:inline-block">
-          <button class="help_getter" style="background-color:rgb(245, 255, 236);font-weight: bolder;font-size: larger;box-shadow: lightgoldenrodyellow;border-radius: 50%;">?</button>
-          <button class="wgather" >Gather Window Tabs</button>
-          <button class="wsaver" >Save Window</button>
-          <button class="wgetter" >Retrieve Windows</button>
+      <div style="background-color: rgb(250, 224, 186);padding: 4px;border: 1px solid rgb(9, 32, 82)" >
+          <label>Enter your email for fetching or saving:</label> <input type="email" name="uemail" id="uemail" value=""   />
+          <button class="fun-click-magic">click makes it stick</button>
       </div>
-      </div>
-      <input id="all_tabs" type="hidden" value="" >
-      <input id="window_tabs" type="hidden" value="" >
-    </div>
-    <div style="background-color: rgb(250, 224, 186);padding: 4px;border: 1px solid rgb(9, 32, 82)" >
-        <label>Enter your email for fetching or saving:</label> <input type="email" name="uemail" id="uemail" value="" />
     </div>
   </div>
 
-   <!-- Tab links -->
-  <div class="tab">
-    <button id="pick-gathered_tabs" class="tablinks active" >Gathered</button>
-    <button id="pick-requested_topics" class="tablinks" >Topics</button>
-    <button id="pick-requested_clusters" class="tablinks" >Clustering</button>
-    <button id="pick-requested_domains" class="tablinks" >Domains</button>
-    <button id="pick-window_gathered" class="tablinks" >This Window Tabs</button>
-    <button id="pick-requested_windows" class="tablinks" >Windows</button>
-    <button id="pick-requested_help" class="tablinks" >Help</button>
-  </div>
+  <div id="show_on_init_2" >
+    <!-- Tab links -->
+    <div class="tab">
+      <button id="pick-gathered_tabs" class="tablinks active" >Gathered</button>
+      <button id="pick-requested_topics" class="tablinks" >Topics</button>
+      <button id="pick-requested_clusters" class="tablinks" >Clustering</button>
+      <button id="pick-requested_domains" class="tablinks" >Domains</button>
+      <button id="pick-window_gathered" class="tablinks" >This Window Tabs</button>
+      <button id="pick-requested_windows" class="tablinks" >Windows</button>
+      <button id="pick-requested_help" class="tablinks" >Help</button>
+    </div>
 
-  <div id="gathered_tabs" class="tabcontent" style="display: block;" >
-      <h4>List of Open Tabs</h4>
-      <div style="max-width: 300px;">Click on <b>Gather Tabs</b> to gather tabs from all windows</div>
-      <ul id="tab_list">
+    <div id="gathered_tabs" class="tabcontent" style="display: block;" >
+        <h4>List of Open Tabs</h4>
+        <div style="max-width: 300px;">Click on <b>Gather Tabs</b> to gather tabs from all windows</div>
+        <ul id="tab_list">
+            
+        </ul>
+    </div>
+
+    <div id="requested_topics" class="tabcontent" >
+      <h4>List of Stored Topics</h4> 
+      <div style="max-width: 300px">Click on <b>Retrieve Topics</b> to see all of the topics found in the tabs that you previously saved. 
+        Results will be sorted by how many tabs they attract.</div>
+      <ul id="topic_list">
           
       </ul>
-  </div>
-
-  <div id="requested_topics" class="tabcontent" >
-    <h4>List of Stored Topics</h4> 
-    <div style="max-width: 300px">Click on <b>Retrieve Topics</b> to see all of the topics found in the tabs that you previously saved. 
-      Results will be sorted by how many tabs they attract.</div>
-    <ul id="topic_list">
-        
-    </ul>
-  </div>
-
-  <div id="requested_clusters" class="tabcontent" >
-    <h4>List of Stored Topics</h4> 
-    <div style="max-width: 300px">Enter up to five key words that you think will attract more tabs. Then, click 
-      <button class="cluster" >cluster</button>
-      to update your topics</div>
-    <ol id="user_clusters">
-        <li>
-          <input id="uc_1" type="text" value = "" />
-        </li>
-        <li>
-          <input id="uc_2" type="text" value = "" />
-        </li>
-        <li>
-          <input id="uc_3" type="text" value = "" />
-        </li>
-        <li>
-          <input id="uc_4" type="text" value = "" />
-        </li>
-        <li>
-          <input id="uc_5" type="text" value = "" />
-        </li>
-      </ol>
-  </div>
-
-
-  <div id="requested_domains" class="tabcontent" >
-    <h4>List of Stored Topics</h4> 
-    <div style="max-width: 300px">Click on <b>Retrieve Domains</b> to see all of the topics found in the tabs that you previously saved.</div>
-    <ul id="domain_list">
-        
-    </ul>
-  </div>
- 
-  <div id="window_gathered" class="tabcontent" >
-    <h4>Tabs in This Window</h4> 
-    <div style="max-width: 300px">Click on <b>Gather Window Tabs</b> to gather tabs from this windows</div>
-    <ul id="window_tab_list">
-        
-    </ul>
-  </div>
- 
-  <div id="requested_windows" class="tabcontent" >
-    <h4>List of Stored Windows</h4> 
-    <div style="max-width: 300px">Click on <b>Retrieve Windows</b> to see all of the windows that you previously saved</div>
-    <ul id="window_list">
-        
-    </ul>
-  </div>
-
-  <div id="requested_help" class="tabcontent" style="background-color: rgb(253, 245, 229);cursor:pointer">
-    <h4>How to use</h4> 
-    <div >
-      If you want to clear all your data and start over, then click here: <button  class="do_clear" >clear</button>
     </div>
-    <div >
-      If you want to undo your clear, then click here: <button  class="do_undo" >undo</button>
+
+    <div id="requested_clusters" class="tabcontent" >
+      <h4>List of Stored Topics</h4> 
+      <div style="max-width: 300px">Enter up to five key words that you think will attract more tabs. Then, click 
+        <button class="cluster" >cluster</button>
+        to update your topics</div>
+      <ol id="user_clusters">
+          <li>
+            <input id="uc_1" type="text" value = "" />
+          </li>
+          <li>
+            <input id="uc_2" type="text" value = "" />
+          </li>
+          <li>
+            <input id="uc_3" type="text" value = "" />
+          </li>
+          <li>
+            <input id="uc_4" type="text" value = "" />
+          </li>
+          <li>
+            <input id="uc_5" type="text" value = "" />
+          </li>
+        </ol>
     </div>
-    <div >
-      Please keep in mind that you can have greater control from your account dashboard at https://www.copious.world. 
-      For the tab-senses interface, the server keeps an undo stack of depth seven (7)
+
+
+    <div id="requested_domains" class="tabcontent" >
+      <h4>List of Stored Topics</h4> 
+      <div style="max-width: 300px">Click on <b>Retrieve Domains</b> to see all of the topics found in the tabs that you previously saved.</div>
+      <ul id="domain_list">
+          
+      </ul>
     </div>
-    <div id="help_display" style="max-width: 300px" style="background-color: inherit;color:rgb(133, 0, 0)">
-      help goes here
+  
+    <div id="window_gathered" class="tabcontent" >
+      <h4>Tabs in This Window</h4> 
+      <div style="max-width: 300px">Click on <b>Gather Window Tabs</b> to gather tabs from this windows</div>
+      <ul id="window_tab_list">
+          
+      </ul>
+    </div>
+  
+    <div id="requested_windows" class="tabcontent" >
+      <h4>List of Stored Windows</h4> 
+      <div style="max-width: 300px">Click on <b>Retrieve Windows</b> to see all of the windows that you previously saved</div>
+      <ul id="window_list">
+          
+      </ul>
+    </div>
+
+    <div id="requested_help" class="tabcontent" style="background-color: rgb(253, 245, 229);cursor:pointer">
+      <h4>How to use</h4>
+      <button id="tab-service-changer">Change tab service provider</button>
+      <div id="help_display" style="max-width: 300px" style="background-color: inherit;color:rgb(133, 0, 0)">
+        help goes here
+      </div>
+    </div>
+  
+    <div id="error-content" class="hidden">
+      <p>Can't access the tab-senses tool from this web page.</p><p>Try a different page.</p>
     </div>
   </div>
- 
- 
 
-  <div id="error-content" class="hidden">
-    <p>Can't access the tab-senses tool from this web page.</p><p>Try a different page.</p>
+  <div id="dont_show_if_setup" >
+      <label for="choose_server">Choose a server:</label>
+      <select id="select-host-options"  name="choose_server" >
+        <option>localhost:3111</option>
+        <option>tab-sever.copious.world</option>
+        <option>www.firstguytoinstall.org</option>
+      </select>
+      <button id="select-host" >use this tab manager server</button>
   </div>
+
+
   <script src="tab-senses.js"></script>
 </body>
 

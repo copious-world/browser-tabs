@@ -490,7 +490,7 @@ const SERVER_WINDOW_CLEAR =  "/clear"
 const SERVER_WINDOW_UNDO =  "/undo"
 
 // REAL STUFF
-const SERVER_ADMIN_CMD =  "/user/$$USER_IDENTIFIER"
+const USER_ADMIN_CMD =  "/user/$$USER_IDENTIFIER"
 
 const DEFAULT_CLICK_CONTEXT = "domains"
 
@@ -1121,7 +1121,7 @@ async function fetch_user_info(user) { // ---- ---- ---- ---- ---- ---- ---- ---
       "cmd" : "user-info",
       "user" : user
     }
-    let response = await postData(SERVER_ADMIN_CMD,postable)
+    let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
       let u_info = response.data
       let info_loc = document.getElementById("user_list")
@@ -1336,7 +1336,7 @@ async function fetch_user_windows(user) {
       "cmd" : "user-windows",
       "user" : user
     }
-    let response = await postData(SERVER_ADMIN_CMD,postable)
+    let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
       let u_info = response.data    /// an array...
       g_last_shown_list = []
@@ -1383,7 +1383,7 @@ async function fetch_user_domains(user) {
       "cmd" : "user-domains",
       "user" : user
     }
-    let response = await postData(SERVER_ADMIN_CMD,postable)
+    let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
       let [a_list, a_map] = display_info_list(response.data)
       g_domain_list = a_list
@@ -1407,7 +1407,7 @@ async function fetch_user_topics(user) {
       "cmd" : "user-topics",
       "user" : user
     }
-    let response = await postData(SERVER_ADMIN_CMD,postable)
+    let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
       let [a_list, a_map] = display_info_list(response.data)
       g_topic_list = a_list
@@ -1425,7 +1425,7 @@ async function fetch_user_words(user) {
       "cmd" : "user-words",
       "user" : user
     }
-    let response = await postData(SERVER_ADMIN_CMD,postable)
+    let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
       let [a_list, a_map] = display_word_list(response.data)
       g_word_list = a_list
@@ -1569,26 +1569,28 @@ function show_links(which_list) {
 }
 
 
-// message to the server to update the sets
-// belonging to this user....
-function save_all(category) {
-  switch (category) {
-    case "topics" : {
-      break;
+
+async function save_user_info(user,category,data) {
+  let disp_drop = document.getElementById("user-data")
+  if ( disp_drop ) {
+    let postable = {
+      "cmd" : `user-save-${category}`,
+      "user" : user,
+      "data" : data
     }
-    case "words" : {
-      break;
-    }
-    case "domains" : {
-      break;
-    }
-    case "windows" : {
-      break;
-    }
-    default: {
-      break;
+    let response = await postData(USER_ADMIN_CMD,postable)
+    if ( response.OK !== "true" ) {
+      console.log("oops")
     }
   }
+}
+
+
+// message to the server to update the sets
+// belonging to this user....
+async function save_all(category) {
+  let [a_list,a_map] = get_edit_lists(category)
+  await save_user_info('$$USER_IDENTIFIER',category,a_map)
 }
 
 

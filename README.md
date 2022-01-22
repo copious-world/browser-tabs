@@ -46,8 +46,6 @@ This extension includes a browser action with a popup specified as popup/tab-sen
 
 # Users Accounts
 
-The extensions will check cookies for user account verification.
-
 A user account will be required to fetch tabs or do further tab categorization and managent.
 
 Tabs may be saved away within copiou.world for a limited time until a user account is established. Once a user account is established, tabs may be pinned or removed by the user.
@@ -58,6 +56,7 @@ Tabs may be saved away within copiou.world for a limited time until a user accou
 ### Popup Interface
 
 ### User Dashboard
+
 
 # Admin Operations
 
@@ -87,6 +86,31 @@ There is just one admin page for this server. It is developed independently from
 # Dev Topics
 
 Here are some areas to consider if you hack the code.
+
+## API
+
+The following points are web API endpoints:
+
+* / 
+
+> Root - This returns a phrase:
+> 
+> > Hello You have encountered a peer copious.world tab server.... open to the public...
+
+* /dashboard/:id\_token
+* /admin/:id\_token
+* /user/:id\_token
+* /select-host
+* /put\_tabs
+* /put\_window
+* /get\_topic\_tabs/:which\_topic
+* /get\_topics
+* /get\_domains
+* /get\_windows
+* /get\_link\_meta/:which\_topic
+* /clear
+* /undo
+
 
 ## Javascript Files and Manifests
 

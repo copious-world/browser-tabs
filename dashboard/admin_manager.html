@@ -198,6 +198,18 @@ button {
   100% {stroke-opacity: 0}
 }
 
+.user_control_button {
+  margin-bottom: 3px;
+  font-weight: bold;
+  color:rgb(43, 59, 59);
+}
+
+.user_name {
+  font-weight: bolder;
+  color: rgb(58, 77, 41);
+  
+}
+
 </style>
 <body>
   <div id="popup-content">
@@ -1016,18 +1028,18 @@ function make_user_active(el) {
   //id="user-info-id"
   let html_str = el
   let el_buttons = `
-  <span>${el} </span>
-  <button onclick="fetch_user_info('${el}')">fetch info</button> 
-  <button onclick="fetch_user_domains('${el}')">domains</button> 
-  <button onclick="fetch_user_topics('${el}')" >topics</button> 
-  <button onclick="fetch_user_words('${el}')">words</button> 
-  <button onclick="fetch_user_windows('${el}')">windows</button> 
-  <button onclick="block_user('${el}')" >block</button> <button onclick="unblock_user('${el}')" >unblock</button>
+  <span class="user_name" >${el} </span>
+  <button class="user_control_button" onclick="fetch_user_info('${el}')">fetch info</button> 
+  <button class="user_control_button" onclick="fetch_user_domains('${el}')">domains</button> 
+  <button class="user_control_button" onclick="fetch_user_topics('${el}')" >topics</button> 
+  <button class="user_control_button" onclick="fetch_user_words('${el}')">words</button> 
+  <button class="user_control_button" onclick="fetch_user_windows('${el}')">windows</button> 
+  <button class="user_control_button" onclick="block_user('${el}')" >block</button> 
+  <button class="user_control_button" onclick="unblock_user('${el}')" >unblock</button>
   `
 
   let doc_el = document.createElement('blockquote')
   doc_el.innerHTML = el_buttons
-
 
   return doc_el
 }

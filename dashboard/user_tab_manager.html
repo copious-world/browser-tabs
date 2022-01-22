@@ -289,31 +289,25 @@ button {
               <text xml:space="preserve" style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:28.53204727px;line-height:125%;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" x="90" y="175.07523" id="text4165" transform="scale(0.90874022,1.1004245)"><tspan id="tspan4167" x="90" y="175.07523">opious</tspan></text>
             </svg>
         </a>
-      </div>
-      <div style="background-color: blanchedalmond;padding: 4px;border: 1px solid rgb(82, 9, 82)">
         <div style="height:38;display:inline-block">
-          <button class="help_getter" style="background-color:rgb(245, 255, 236);font-weight: bolder;font-size: larger;box-shadow: lightgoldenrodyellow;border-radius: 50%;">?</button>
           <span class="user-name"  >$$USER_IDENTIFIER</span>
-          <button class="wulist" onclick="fetch_user_domains('$$USER_IDENTIFIER')">domains</button> 
-          <button class="wsaver" onclick="fetch_user_topics('$$USER_IDENTIFIER')" >topics</button> 
-          <button class="wulist" onclick="fetch_user_words('$$USER_IDENTIFIER')">words</button> 
-          <button class="wgetter" onclick="fetch_user_windows('$$USER_IDENTIFIER')">windows</button> 
-      </div>
+          <button class="help_getter" style="background-color:rgb(245, 255, 236);font-weight: bolder;font-size: larger;box-shadow: lightgoldenrodyellow;border-radius: 50%;">?</button>
+        </div>
       </div>
       <input id="all_tabs" type="hidden" value="" >
       <input id="window_tabs" type="hidden" value="" >
     </div>
     <div style="background-color: rgb(250, 224, 186);padding: 4px;border: 1px solid rgb(9, 32, 82)" >
-        <label>This is your email, from the extension popup, for fetching or saving:</label> <input disabled type="email" name="uemail" id="uemail" value="$$USER_IDENTIFIER" />
+        <input type="hidden" name="uemail" id="uemail" value="$$USER_IDENTIFIER" />
     </div>
   </div>
 
    <!-- Tab links -->
   <div class="tab">
     <button id="pick-ulisted_tabs" class="tablinks active" >View</button>
+    <button id="pick-edit_clusters" class="tablinks" >Edit Clustering</button>
     <button id="pick-edit_topics" class="tablinks" >Edit Topics</button>
     <button id="pick-edit_words" class="tablinks" >Edit Words</button>
-    <button id="pick-edit_clusters" class="tablinks" >Edit Clustering</button>
     <button id="pick-edit_domains" class="tablinks" >Edit Domains</button>
     <button id="pick-edit_windows" class="tablinks" >Edit Windows</button>
     <button id="pick-edit_help" class="tablinks" >Help</button>
@@ -344,32 +338,11 @@ button {
       </div>
   </div>
 
-  <div id="edit_topics" class="tabcontent" >
-    <h4>Edit Topics</h4>
-    <h6>add/delete topics, Move URLs, Delete URLS, Add URLS (by hand/copy/paste)</h6>
-    <div>
-     <button>delete selected</button><button>add</button><input type="text" ><button onclick="show_links('topics')">show links</button>
-     <button onclick="save_all('topics')">save all</button>
-    </div>
-    <div class="edit-ops-container">
-      <div id="edit-left-topics" class="edit-left" >
-left
-      </div>
-      <div id="edit-center-topics" class="edit-center" >
-        <div id="topics-grid" class="edit-center-content" >
-
-        </div>
-      </div>
-      <div id="edit-right-topics" class="edit-right" >
-right
-      </div>
-    </div>
-  </div>
 
   <div id="edit_clusters" class="tabcontent" >
     <h4>List of Stored Topics</h4> 
     <div style="max-width: 300px">Edit your top five key words. Then, click 
-      <button class="cluster" >cluster</button> to update your topics</div>
+      <button class="cluster" onclick="save_with_cluster(event)">cluster</button> to update your topics</div>
     <ol id="user_clusters">
         <li>
           <input id="uc_1" type="text" value = "" />
@@ -390,10 +363,34 @@ right
   </div>
 
 
+  <div id="edit_topics" class="tabcontent" >
+    <h4>Edit Topics</h4>
+    <h6>add/delete topics, Move URLs, Delete URLS, Add URLS (by hand/copy/paste)</h6>
+    <div>
+      <button class="wsaver" onclick="fetch_user_topics('$$USER_IDENTIFIER')" >topics</button> 
+      <button>delete selected</button><button>add</button><input type="text" ><button onclick="show_links('topics')">show links</button>
+      <button onclick="save_all('topics')">save all</button>
+    </div>
+    <div class="edit-ops-container">
+      <div id="edit-left-topics" class="edit-left" >
+left
+      </div>
+      <div id="edit-center-topics" class="edit-center" >
+        <div id="topics-grid" class="edit-center-content" >
+
+        </div>
+      </div>
+      <div id="edit-right-topics" class="edit-right" >
+right
+      </div>
+    </div>
+  </div>
+
   <div id="edit_domains" class="tabcontent" >
     <h4>Edit Domains</h4>
     <h6>Changes apply to the domain list and do not propagate to topics or words</h6>
     <div id="domain-app" >
+      <button class="wulist" onclick="fetch_user_domains('$$USER_IDENTIFIER')">domains</button> 
       <button>delete selected</button><button>add</button><input type="text" ><button onclick="show_links('domains')">show links</button>
       <button onclick="save_all('domains')">save all</button>
     </div>
@@ -414,11 +411,12 @@ right
 
   </div>
  
-
+ 
   <div id="edit_words" class="tabcontent" >
     <h4>Edit Word Lists</h4>
     <h6>Changes apply to the word list and do not propagate to topics or domains</h6>
     <div id="word-app" >
+      <button class="wulist" onclick="">words</button> 
       <button>delete selected</button><button>add</button><input type="text" ><button onclick="show_links('words')">show links</button>
       <button onclick="save_all('words')">save all</button>
     </div>
@@ -443,6 +441,7 @@ right
     <h4>Edit Window Lists</h4>
     <h6>Operate on the list of windows proper - windows removed may still be available in the topic list</h6>
     <div id="word-app" >
+      <button class="wgetter" onclick="fetch_user_windows('$$USER_IDENTIFIER')">windows</button> 
       <button>delete selected</button><button>add</button><input type="text" ><button onclick="show_links('windows')">show links</button>
       <button onclick="save_all('windows')">save all</button>
     </div>
@@ -460,6 +459,7 @@ right
       </div>
     </div>
   </div>
+
 
   <div id="edit_help" class="tabcontent" style="background-color: rgb(253, 245, 229);cursor:pointer">
     <h4>How to use</h4> 
@@ -845,11 +845,6 @@ async function save_tabs(cluster_points) {
   }
 }
 
-/*
-
-let cluster_points = get_cluster_point_list()
-
-*/
 
 
 async function save_window() {
@@ -1436,6 +1431,18 @@ async function fetch_user_words(user) {
 }
 
 
+// // //
+// // // // // 
+async function fetch_all() {
+  await fetch_user_info("$$USER_IDENTIFIER")
+  await fetch_user_topics('$$USER_IDENTIFIER')
+  await fetch_user_domains('$$USER_IDENTIFIER')
+  await fetch_user_words('$$USER_IDENTIFIER')
+  await fetch_user_windows('$$USER_IDENTIFIER')
+}
+
+
+
 function get_edit_lists(which_list) {
   let a_list = g_topic_list
   let a_map = g_topic_map
@@ -1570,6 +1577,12 @@ function show_links(which_list) {
 
 
 
+async function save_with_cluster(event) {
+  let cluster_points = get_cluster_point_list()
+  await save_tabs(cluster_points)
+}
+
+
 async function save_user_info(user,category,data) {
   let disp_drop = document.getElementById("user-data")
   if ( disp_drop ) {
@@ -1600,7 +1613,6 @@ function show_status(msg) {
 
 
 
-
-fetch_user_info("$$USER_IDENTIFIER")
+fetch_all()
 
 </script>

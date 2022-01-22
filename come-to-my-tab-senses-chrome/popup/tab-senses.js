@@ -574,6 +574,7 @@ function listenForClicks() {
         let target =  document.getElementById("pick-gathered_tabs")
         openResults(target, "gathered_tabs")
       } else if ( e.target.classList.contains("cluster") ) {
+        /*
         let cluster_points = get_cluster_point_list()
         await save_tabs(cluster_points)   // sends tabs to the server
         //
@@ -582,6 +583,7 @@ function listenForClicks() {
         let target =  document.getElementById("pick-requested_topics")
         openResults(target, "requested_topics")
         save_everything()
+        */
       } else if ( e.target.classList.contains("wgather") ) {
         await gather_window_tabs()
         let target =  document.getElementById("pick-window_gathered")

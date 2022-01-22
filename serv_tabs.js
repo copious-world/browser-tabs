@@ -84,7 +84,7 @@ async function load_topics_and_domains() {
 
 // 
 app.get('/', (req, res) => {
-  res.send('Hello You have encountered the copious.world tab server.... open to the public...')
+  res.send('Hello You have encountered a peer copious.world tab server.... open to the public...')
 })
 
 

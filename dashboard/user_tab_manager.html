@@ -243,19 +243,27 @@ button {
 .edit-center-content {
   display: grid;
 
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   column-gap: 6px;
   row-gap: 1em;
   width: inherit;
-  height: inherit;
+  height: fit-content;
   padding:2px;
 }
 
 
+.edit-center-content-wrapper {
+  border: solid 1px blue;
+  background-color: rgb(255, 255, 245);
+  font-weight: bold;
+  color:rgb(18, 31, 70);
+  padding: 2px;
+}
+
 
 .edit-center-dropper {
   width:  fit-content;
-  height: 24px;
+  height: fit-content;
   padding: 4px;
   border: solid 1px goldenrod;
   background-color: lightgoldenrodyellow;
@@ -321,12 +329,19 @@ button {
         <button onclick="sort_list(true)">sort up</button>
         <button onclick="sort_list(false)">sort down</button>
         <button onclick="toggle_grid()">toggle grid</button>
+        <button onclick="save_everything(event)">save everything</button>
       </div>
       <div style="grid-row: auto;height:160px;">
-        <div id="user_list" class="tabcontent-sub" style="display:inline-block;height:150px;overflow:auto;width:40%" >
+        <div id="user_list" class="tabcontent-sub" style="display:inline-block;height:150px;overflow:auto;width:25%" >
 
         </div>
-        <div class="tabcontent-sub" id="linkcontent-sub" style="display:inline-block;height:150px;overflow:auto;width:55%" >
+        <div id="user_list" class="tabcontent-sub" style="display:inline-block;height:150px;overflow:auto;width:5%;text-align: center;" >
+          <button style="width:95%" onclick="front_view('topics')">display topics</button>
+          <button style="width:95%" onclick="front_view('words')">display words</button>
+          <button style="width:95%" onclick="front_view('domains')">display domains</button>
+          <button style="width:95%" onclick="front_view('windows')">display windows</button>
+        </div>
+        <div class="tabcontent-sub" id="linkcontent-sub" style="display:inline-block;height:150px;overflow:auto;width:60%" >
 
         </div>
       </div>
@@ -368,16 +383,37 @@ button {
     <h6>add/delete topics, Move URLs, Delete URLS, Add URLS (by hand/copy/paste)</h6>
     <div>
       <button class="wsaver" onclick="fetch_user_topics('$$USER_IDENTIFIER')" >topics</button> 
-      <button>delete selected</button><button>add</button><input type="text" ><button onclick="show_links('topics')">show links</button>
-      <button onclick="save_all('topics')">save all</button>
+      <button onclick="delete_from('topics')" >delete selected</button><button onclick="add_to('topics','topic-entry')">add</button><input id="topic-entry" type="text" >
+      <button onclick="show_links('topics')">show links</button>
+      <button onclick="save_all('topics')">save topic changes</button>
     </div>
     <div class="edit-ops-container">
       <div id="edit-left-topics" class="edit-left" >
 left
       </div>
       <div id="edit-center-topics" class="edit-center" >
-        <div id="topics-grid" class="edit-center-content" >
+        <div class="edit-center-content-wrapper">
+          topics
+          <div id="topics-grid-topics" class="edit-center-content" >
 
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          words
+          <div id="words-grid-topics" class="edit-center-content" >
+
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          domains
+          <div id="domains-grid-topics" class="edit-center-content" >
+
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          windows
+          <div id="windows-grid-topics" class="edit-center-content" >
+          </div>
         </div>
       </div>
       <div id="edit-right-topics" class="edit-right" >
@@ -391,8 +427,10 @@ right
     <h6>Changes apply to the domain list and do not propagate to topics or words</h6>
     <div id="domain-app" >
       <button class="wulist" onclick="fetch_user_domains('$$USER_IDENTIFIER')">domains</button> 
-      <button>delete selected</button><button>add</button><input type="text" ><button onclick="show_links('domains')">show links</button>
-      <button onclick="save_all('domains')">save all</button>
+      <button onclick="delete_from('domains')" >delete selected</button>
+      <button onclick="add_to('domains','domain-entry')" >add</button><input id="domain-entry" type="text" >
+      <button onclick="show_links('domains')">show links</button>
+      <button onclick="save_all('domains')">save domain changes</button>
     </div>
 
     <div class="edit-ops-container">
@@ -400,8 +438,28 @@ right
 left
       </div>
       <div id="edit-center-domains" class="edit-center" >
-        <div id="domains-grid" class="edit-center-content" >
+        <div class="edit-center-content-wrapper">
+          topics
+          <div id="topics-grid-domains" class="edit-center-content" >
 
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          words
+          <div id="words-grid-domains" class="edit-center-content" >
+
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          domains
+          <div id="domains-grid-domains" class="edit-center-content" >
+
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          windows
+          <div id="windows-grid-domains" class="edit-center-content" >
+          </div>
         </div>
       </div>
       <div id="edit-right-domains" class="edit-right" >
@@ -417,8 +475,10 @@ right
     <h6>Changes apply to the word list and do not propagate to topics or domains</h6>
     <div id="word-app" >
       <button class="wulist" onclick="">words</button> 
-      <button>delete selected</button><button>add</button><input type="text" ><button onclick="show_links('words')">show links</button>
-      <button onclick="save_all('words')">save all</button>
+      <button onclick="delete_from('words')" >delete selected</button>
+      <button onclick="add_to('words','word-entry')" >add</button><input id="word-entry" type="text" >
+      <button onclick="show_links('words')">show links</button>
+      <button onclick="save_all('words')">save word changes</button>
     </div>
 
     <div class="edit-ops-container">
@@ -426,8 +486,28 @@ right
 left
       </div>
       <div id="edit-center-words" class="edit-center" >
-        <div id="words-grid" class="edit-center-content" >
+        <div class="edit-center-content-wrapper">
+          topics
+          <div id="topics-grid-words" class="edit-center-content" >
 
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          words
+          <div id="words-grid-words" class="edit-center-content" >
+
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          domains
+          <div id="domains-grid-words" class="edit-center-content" >
+
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          windows
+          <div id="windows-grid-words" class="edit-center-content" >
+          </div>
         </div>
       </div>
       <div id="edit-right-words" class="edit-right" >
@@ -442,16 +522,38 @@ right
     <h6>Operate on the list of windows proper - windows removed may still be available in the topic list</h6>
     <div id="word-app" >
       <button class="wgetter" onclick="fetch_user_windows('$$USER_IDENTIFIER')">windows</button> 
-      <button>delete selected</button><button>add</button><input type="text" ><button onclick="show_links('windows')">show links</button>
-      <button onclick="save_all('windows')">save all</button>
+      <button onclick="delete_from('windows')" >delete selected</button>
+      <button onclick="add_to('windows','window-entry')" >add</button><input id="window-entry" type="text" >
+      <button onclick="show_links('windows')">show links</button>
+      <button onclick="save_all('windows')">save window changes</button>
     </div>
     <div class="edit-ops-container">
       <div id="edit-left-windows" class="edit-left" >
 left
       </div>
       <div id="edit-center-windows" class="edit-center" >
-        <div id="windows-grid" class="edit-center-content" >
+        <div class="edit-center-content-wrapper">
+          topics
+          <div id="topics-grid-windows" class="edit-center-content" >
 
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          words
+          <div id="words-grid-windows" class="edit-center-content" >
+
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          domains
+          <div id="domains-grid-windows" class="edit-center-content" >
+
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          windows
+          <div id="windows-grid-windows" class="edit-center-content" >
+          </div>
         </div>
       </div>
       <div id="edit-right-windows" class="edit-right" >
@@ -506,9 +608,6 @@ let g_keep_data_around = {
     "window_tab_list" : "nada"
   }
 }
-
-
-
 
 
 // Generic method for querying the server ... temporary tab storage....
@@ -1037,7 +1136,7 @@ function inject_topic_into_dashboard(package_name,link_package) {
 }
 
 
-function save_everything() {
+function save_everything(ev) {
 
   console.log("save_everything::  ")
 
@@ -1052,8 +1151,9 @@ function save_everything() {
         "data" : data_to_save
       }
     }
-    console.log("save_everything::  " + data_to_save)
+    //console.log("save_everything::  " + data_to_save)
     //
+    // SAVE EVERYTHING
     //
   }
 }
@@ -1134,7 +1234,7 @@ let g_last_sort_direction = "priority"
 
 let g_last_shown_list = []
 let g_last_shown_map = {}
-let g_last_list_rendereing = []
+let g_last_list_rendering = []
 
 let g_word_list = [] // for making the edit displays
 let g_topic_list = [] // for making the edit displays
@@ -1146,8 +1246,17 @@ let g_topic_map = {} // for making the edit displays
 let g_domain_map = {} // for making the edit displays
 let g_window_map = {} // for making the edit displays
 
-// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+let g_finally_display_words = []
+let g_finally_display_topics = []
+let g_finally_display_domains = []
+let g_finally_display_windows = []
 
+let g_finally_display_words_map = {}
+let g_finally_display_topics_map = {}
+let g_finally_display_domains_map = {}
+let g_finally_display_windows_map = {}
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 
 function install_editing(a_list,container_id,btype) {
@@ -1290,7 +1399,7 @@ function display_info_list(u_info) {
     list_choice.innerHTML = "domains"
   }
   //
-  return [[].concat(g_last_shown_list),Object.assign({},u_info)]
+  return [[].concat(g_last_shown_list),Object.assign({},u_info),info,g_last_shown_map]
 }
 
 function display_word_list(u_info) {
@@ -1318,7 +1427,7 @@ function display_word_list(u_info) {
     list_choice.innerHTML = "words"
   }
 
-  return [[].concat(g_last_shown_list),word_map]
+  return [[].concat(g_last_shown_list),word_map,info,g_last_shown_map]
 }
 
 
@@ -1355,6 +1464,8 @@ async function fetch_user_windows(user) {
       for ( let i = 0; i < info.length; i++ ) {
         g_last_shown_map[g_last_shown_list[i]] = info[i]
       }
+      g_finally_display_windows = info
+      g_finally_display_windows_map = g_finally_display_windows
       //
       finally_display(info)
       //
@@ -1380,9 +1491,11 @@ async function fetch_user_domains(user) {
     }
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
-      let [a_list, a_map] = display_info_list(response.data)
+      let [a_list, a_map, front_display,front_map] = display_info_list(response.data)
       g_domain_list = a_list
       g_domain_map = a_map
+      g_finally_display_domains = front_display
+      g_finally_display_domains_map = front_map
       install_editing(g_domain_list,"edit-left-domains","domains")
     }
   }
@@ -1404,9 +1517,11 @@ async function fetch_user_topics(user) {
     }
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
-      let [a_list, a_map] = display_info_list(response.data)
+      let [a_list, a_map, front_display,front_map] = display_info_list(response.data)
       g_topic_list = a_list
       g_topic_map = a_map
+      g_finally_display_topics = front_display
+      g_finally_display_topics_map = front_map
       install_editing(g_topic_list,"edit-left-topics","topics")
     }
   }
@@ -1422,9 +1537,11 @@ async function fetch_user_words(user) {
     }
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
-      let [a_list, a_map] = display_word_list(response.data)
+      let [a_list, a_map, front_display,front_map] = display_word_list(response.data)
       g_word_list = a_list
       g_word_map = a_map
+      g_finally_display_words = front_display
+      g_finally_display_words_map = front_map
       install_editing(g_word_list,"edit-left-words","words")
     }
   }
@@ -1515,9 +1632,9 @@ function show_moveable_links(which_list) {
 }
 
 
-function show_drop_operators(which_list) {
+function show_drop_operators(which_list,context) {
   //
-  let container = document.getElementById(`${which_list}-grid`)
+  let container = document.getElementById(`${which_list}-grid-${context}`)
   if ( container ) {
     let name = `op_list_${which_list}`
     let checkedBoxes = document.querySelectorAll(`input[name=${name}]:checked`);
@@ -1540,9 +1657,7 @@ function show_drop_operators(which_list) {
     })
   
     container.innerHTML = display_links.join("\n")
-
   }
-
   //
 }
 
@@ -1551,12 +1666,12 @@ function handle_drop_link(event,which_list,element) {
   if ( event.dataTransfer ) {
     const data = event.dataTransfer.getData("text/plain");
     let seploc = data.indexOf(':')
-    let to_key = data.substr(0,seploc)
+    let from_key = data.substr(0,seploc)
     let url = data.substr(seploc+1)
 
     let [a_list,a_map] = get_edit_lists(which_list)
     //
-    let from_list = a_map[to_key]
+    let from_list = a_map[from_key]
     let to_list = a_map[element]
 
     let idx = from_list.indexOf(url)
@@ -1570,9 +1685,53 @@ function handle_drop_link(event,which_list,element) {
 }
 
 
+
+function front_view(which_list) {
+  let list_choice = document.getElementById("user-info-id")
+  if ( list_choice ) {
+    list_choice.innerHTML = which_list
+  }
+
+  let info = []
+  switch ( which_list ) {
+    case "topics" : {
+      g_last_shown_list = g_topic_list
+      info = g_finally_display_topics
+      g_last_shown_map = g_finally_display_topics_map
+      break
+    }
+    case "words" : {
+      g_last_shown_list = g_word_list
+      info = g_finally_display_words
+      g_last_shown_map = g_finally_display_words_map
+      break
+    }
+    case "domains" : {
+      g_last_shown_list = g_domain_list
+      info = g_finally_display_domains
+      g_last_shown_map = g_finally_display_domains_map
+      break
+    }
+    case "windows" : {
+      g_last_shown_list = g_window_list
+      info = g_finally_display_windows
+      g_last_shown_map = g_finally_display_windows_map
+      break
+    }
+    default : {
+      break
+    }
+  }
+
+  finally_display(info)
+}
+
+
 function show_links(which_list) {
   show_moveable_links(which_list)
-  show_drop_operators(which_list)
+  for ( let context of ["topics","domains","words","windows"] ) {
+    show_drop_operators(which_list,context)
+  }
 }
 
 
@@ -1580,6 +1739,50 @@ function show_links(which_list) {
 async function save_with_cluster(event) {
   let cluster_points = get_cluster_point_list()
   await save_tabs(cluster_points)
+}
+
+
+function add_to(category,value_fld_id) {
+  //
+  let value_fld = document.getElementById(value_fld_id)
+  if ( value_fld ) {
+    let value = value_fld.value
+    if ( value.length ) {
+      let [a_list,a_map] = get_edit_lists(category)
+      let b = a_map[value] 
+      if ( b === undefined ) {
+        //
+        a_map[value] = []
+        a_list.push(value)
+        //  Also, take care of the editing lists....
+      }
+    }
+  }
+  //
+}
+
+
+function delete_from(category) {
+  let [a_list,a_map] = get_edit_lists(category)
+  if ( a_list && a_map ) {
+    let name = `op_list_${which_list}`
+    let checkedBoxes = document.querySelectorAll(`input[name=${name}]:checked`);
+    //
+    let len = checkedBoxes.length
+    let sel_vals = []
+    for ( let i = 0; i < len; i++ ) {
+      let bx = checkedBoxes[i]
+      sel_vals.push(bx.value)
+    }
+    //
+    for ( let value of sel_vals ) {
+      let idx = a_list.indexOf(value)
+      if () {
+        
+      }
+    }
+    //
+  }
 }
 
 

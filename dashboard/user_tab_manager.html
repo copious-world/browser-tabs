@@ -1232,25 +1232,33 @@ async function fetch_user_info(user) { // ---- ---- ---- ---- ---- ---- ---- ---
 let g_grid_on = false
 let g_last_sort_direction = "priority"
 
-let g_last_shown_list = []
-let g_last_shown_map = {}
-let g_last_list_rendering = []
+let g_last_shown_list = []  // the term proper (on use reference to the category saved below g_<cat>_list)
+let g_last_shown_map = {}   // used in showing the sorted lists
+let g_last_list_rendering = []   /// g_finally_display_<category>
 
+// list of terms (not objects -- just strings)
 let g_word_list = [] // for making the edit displays
 let g_topic_list = [] // for making the edit displays
 let g_domain_list = [] // for making the edit displays
 let g_window_list = [] // for making the edit displays
 
+// maps that have been constructed on the server <term,descriptive object>
 let g_word_map = {} // for making the edit displays
 let g_topic_map = {} // for making the edit displays
 let g_domain_map = {} // for making the edit displays
 let g_window_map = {} // for making the edit displays
 
+// These are the displays with hot buttons primed with the links from the display maps
+// These are drawn on the user info screen as buttons. The buttons when clicked will provide clickable url's in 
+// the url display regions (upper right)
 let g_finally_display_words = []
 let g_finally_display_topics = []
 let g_finally_display_domains = []
 let g_finally_display_windows = []
 
+// these are the mapping key terms to hot button displays (array elements in finally display arrays (also last shown list))
+// these correspond to last show map used in reconstructin the rendering 
+// (front display) when sorting (or switching between verticle to rows)
 let g_finally_display_words_map = {}
 let g_finally_display_topics_map = {}
 let g_finally_display_domains_map = {}
@@ -1335,7 +1343,8 @@ function unsort_list() {
 }
 
 
-
+// ---- ---- ---- ---- ---- ---- ---- ---- ----
+// ---- ---- ---- ---- ---- ---- ---- ---- ----
 
 // BUTTON RESPONSE FOR SHOWING ENTRY CONTENT
 function show_domain_links(doml_str) {
@@ -1777,8 +1786,9 @@ function delete_from(category) {
     //
     for ( let value of sel_vals ) {
       let idx = a_list.indexOf(value)
-      if () {
-        
+      if ( idx >= 0 ) {
+        a_list.splice(idx,1)
+        delete a_map[value]
       }
     }
     //

@@ -325,7 +325,7 @@ button {
       <h4>User Information</h4>
       <div style="max-width: 300px;">
         This page belongs to <span class="user-name">$$USER_IDENTIFIER</span>
-        <button onclick="save_everything(event)">save everything</button>
+        <button id="save-everything" onclick="save_everything(event)">save everything</button>
       </div>
       <div style="grid-row: auto;height:160px;">
         <div id="user_list" class="tabcontent-sub" style="display:inline-block;height:150px;overflow:auto;width:25%" >
@@ -386,8 +386,7 @@ button {
     <div>
       <button class="wsaver" onclick="fetch_user_topics('$$USER_IDENTIFIER')" >topics</button> 
       <button onclick="delete_from('topics')" >delete selected</button><button onclick="add_to('topics','topic-entry')">add</button><input id="topic-entry" type="text" >
-      <button onclick="show_links('topics')">show links</button>
-      <button onclick="save_all('topics')">save topic changes</button>
+      <button id="save-topics" onclick="save_all('topics')">save topic changes</button>
     </div>
     <div class="edit-ops-container">
       <div id="edit-left-topics" class="edit-left" >
@@ -431,8 +430,7 @@ check boxes on the left and then click <b>show links</b>
       <button class="wulist" onclick="fetch_user_domains('$$USER_IDENTIFIER')">domains</button> 
       <button onclick="delete_from('domains')" >delete selected</button>
       <button onclick="add_to('domains','domain-entry')" >add</button><input id="domain-entry" type="text" >
-      <button onclick="show_links('domains')">show links</button>
-      <button onclick="save_all('domains')">save domain changes</button>
+      <button id="save-domains" onclick="save_all('domains')">save domain changes</button>
     </div>
 
     <div class="edit-ops-container">
@@ -479,8 +477,7 @@ left
       <button class="wulist" onclick="">words</button> 
       <button onclick="delete_from('words')" >delete selected</button>
       <button onclick="add_to('words','word-entry')" >add</button><input id="word-entry" type="text" >
-      <button onclick="show_links('words')">show links</button>
-      <button onclick="save_all('words')">save word changes</button>
+      <button id="save-words"  onclick="save_all('words')">save word changes</button>
     </div>
 
     <div class="edit-ops-container">
@@ -526,8 +523,7 @@ left
       <button class="wgetter" onclick="fetch_user_windows('$$USER_IDENTIFIER')">windows</button> 
       <button onclick="delete_from('windows')" >delete selected</button>
       <button onclick="add_to('windows','window-entry')" >add</button><input id="window-entry" type="text" >
-      <button onclick="show_links('windows')">show links</button>
-      <button onclick="save_all('windows')">save window changes</button>
+      <button id="save-windows" onclick="save_all('windows')">save window changes</button>
     </div>
     <div class="edit-ops-container">
       <div id="edit-left-windows" class="edit-left" >
@@ -1158,6 +1154,8 @@ function save_everything(ev) {
     // SAVE EVERYTHING
     //
   }
+
+  dirty_edit_update(false)
 }
   
 function delete_everything() {
@@ -1231,6 +1229,18 @@ async function fetch_user_info(user) { // ---- ---- ---- ---- ---- ---- ---- ---
 }
 
 
+function push_if_new(to_list,value) {
+  if ( to_list.indexOf(value) >= 0 ) {
+    return false
+  } else {
+    to_list.push(value)
+  }
+  return true
+}
+
+
+
+
 let g_grid_on = false
 let g_last_sort_direction = "priority"
 
@@ -1268,13 +1278,100 @@ let g_finally_display_windows_map = {}
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
+let g_dirty_edits = {
+  "topics" : {
+    "prefix" : "save-",
+    "el" : null,
+    "state" : false,
+    "on_style" : "border: darkred 2px solid",
+    "off_style" : "",
+    "propagate" : "everything",
+    "back_propagate" : false
+  },
+  "words" : {
+    "prefix" : "save-",
+    "el" : null,
+    "state" : false,
+    "on_style" : "border: darkred 2px solid",
+    "off_style" : "",
+    "propagate" : "everything",
+    "back_propagate" : false
+  },
+  "domains" : {
+    "prefix" : "save-",
+    "el" : null,
+    "state" : false,
+    "on_style" : "border: darkred 2px solid",
+    "off_style" : "",
+    "propagate" : "everything",
+    "back_propagate" : false
+  },
+  "windows" : {
+    "prefix" : "save-",
+    "el" : null,
+    "state" : false,
+    "on_style" : "border: darkred 2px solid",
+    "off_style" : "",
+    "propagate" : "everything",
+    "back_propagate" : false
+  },
+  "everything" : {
+    "prefix" : "save-",
+    "el" : null,
+    "state" : false,
+    "on_style" : "border: darkred 2px solid",
+    "off_style" : "",
+    "propagate" : false,
+    "back_propagate" : ["topics", "words", "domains", "windows"]
+  },
+}
+
+function dirty_edit_update(state,category) {
+  if ( state ) {
+    let vardescr = g_dirty_edits[category]
+    let el = vardescr.el
+    el.style = vardescr.on_style
+    //
+    let propagate = vardescr.propagate
+    if ( propagate ) {
+      dirty_edit_update(true,propagate)  // simple fan in for just this page (not universal)
+    }
+  } else {
+    let cat = (category === undefined)  ? "everything" : category
+    let vardescr = g_dirty_edits[cat]
+    let el = vardescr.el
+    el.style = vardescr.off_style
+    let bprops = vardescr.back_propagate
+    if ( bprops ) {
+      for ( let bprop of bprops ) {
+        dirty_edit_update(false,bprop)
+      }
+    }
+  }
+}
+// save-${category}
+//save-everything
+
+
+function prep_updates() {
+  for ( let ky in g_dirty_edits ) {
+    let vardescr = g_dirty_edits[ky]
+    let el_id = vardescr.prefix + ky
+    let el = document.getElementById(el_id)
+    vardescr.el = el
+    vardescr.state = false
+  }
+}
+
+// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
 
 function install_editing(a_list,container_id,btype) {
   let container = document.getElementById(container_id)
   if ( container ) {
     let list_edit_table = a_list.map((a_entry) => {
       //
-      let control = `<label for="${a_entry}-id">${a_entry}</label><input type="checkbox" id="${a_entry}-id" name="op_list_${btype}" value="${a_entry}">` 
+      let control = `<label for="${a_entry}-id">${a_entry}</label><input type="checkbox" id="${a_entry}-id" name="op_list_${btype}" value="${a_entry}" onchange="show_links('${btype}')">` 
       //
       return control
     })
@@ -1660,7 +1757,7 @@ function show_drop_operators(which_list,context) {
     let display_links = sel_vals.map(value => {
       //
       let display_template = `
-    <div  class="edit-center-dropper" ondragover="event.preventDefault()" ondrop="handle_drop_link(event,'${which_list}','${value}')" >
+    <div  class="edit-center-dropper" ondragover="event.preventDefault()" ondrop="handle_drop_link(event,'${context}','${which_list}','${value}')" >
       ${value}
     </div>
 `
@@ -1673,25 +1770,34 @@ function show_drop_operators(which_list,context) {
 }
 
 
-function handle_drop_link(event,which_list,element) {
+function handle_drop_link(event,source_context,dest_context,element) {
+  //
+  event.preventDefault();
+  //
   if ( event.dataTransfer ) {
     const data = event.dataTransfer.getData("text/plain");
     let seploc = data.indexOf(':')
     let from_key = data.substr(0,seploc)
     let url = data.substr(seploc+1)
 
-    let [a_list,a_map] = get_edit_lists(which_list)
+    let [a_to_list,to_map] = get_edit_lists(dest_context)
+    let [a_from_list,from_map] = get_edit_lists(source_context)
     //
-    let from_list = a_map[from_key]
-    let to_list = a_map[element]
-
-    let idx = from_list.indexOf(url)
-    if ( idx >= 0 ) {
-      from_list.splice(idx,1)
+    let to_list = to_map[element]
+    let from_list = from_map[from_key]
+    //
+    if ( !(event.altKey) ) {
+      let idx = from_list.indexOf(url)
+      if ( idx >= 0 ) {
+        from_list.splice(idx,1)
+      }
     }
-    to_list.push(url)
-    event.preventDefault();
-    show_links(which_list)
+    if ( push_if_new(to_list,url) ) {
+      dirty_edit_update(true,dest_context)
+    }
+
+    show_links(dest_context)
+    show_links(source_context)
   }
 }
 
@@ -1762,10 +1868,28 @@ function add_to(category,value_fld_id) {
       let [a_list,a_map] = get_edit_lists(category)
       let b = a_map[value] 
       if ( b === undefined ) {
+        dirty_edit_update(true,category)
+
         //
+        let name = `op_list_${category}`
+        let checkedBoxes = document.querySelectorAll(`input[name=${name}]:checked`);
+        let len = checkedBoxes.length
+        let save_checks = []
+        for ( let i = 0; i < len; i++ ) {
+          let bx = checkedBoxes[i]
+          save_checks.push(bx.id)
+        }
+
         a_map[value] = []
         a_list.push(value)
         //  Also, take care of the editing lists....
+        install_editing(a_list,`edit-left-${category}`,category)
+        front_view(category)
+
+        for ( let bx_id of save_checks ) {
+          let bx_el = document.getElementById(bx_id)
+          bx_el.checked = true
+        }
       }
     }
   }
@@ -1776,7 +1900,7 @@ function add_to(category,value_fld_id) {
 function delete_from(category) {
   let [a_list,a_map] = get_edit_lists(category)
   if ( a_list && a_map ) {
-    let name = `op_list_${which_list}`
+    let name = `op_list_${category}`
     let checkedBoxes = document.querySelectorAll(`input[name=${name}]:checked`);
     //
     let len = checkedBoxes.length
@@ -1791,8 +1915,15 @@ function delete_from(category) {
       if ( idx >= 0 ) {
         a_list.splice(idx,1)
         delete a_map[value]
+        dirty_edit_update(true,category)
+
       }
     }
+
+    //  Also, take care of the editing lists....
+    install_editing(a_list,`edit-left-${category}`,category)
+    show_links(category)
+    front_view(category)
     //
   }
 }
@@ -1819,6 +1950,7 @@ async function save_user_info(user,category,data) {
 async function save_all(category) {
   let [a_list,a_map] = get_edit_lists(category)
   await save_user_info('$$USER_IDENTIFIER',category,a_map)
+  dirty_edit_update(false,category)
 }
 
 
@@ -1826,7 +1958,7 @@ function show_status(msg) {
   //
 }
 
-
+prep_updates()
 
 fetch_all()
 

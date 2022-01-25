@@ -318,6 +318,7 @@ button {
     <button id="pick-edit_words" class="tablinks" >Edit Words</button>
     <button id="pick-edit_domains" class="tablinks" >Edit Domains</button>
     <button id="pick-edit_windows" class="tablinks" >Edit Windows</button>
+    <button id="pick-trash" class="tablinks" ondragover="event.preventDefault()" ondrop="handle_drop_link_trash(event)"  >&#128465;</button>
     <button id="pick-edit_help" class="tablinks" >Help</button>
   </div>
 
@@ -474,7 +475,7 @@ left
     <h4>Edit Word Lists</h4>
     <h6>Changes apply to the word list and do not propagate to topics or domains</h6>
     <div id="word-app" >
-      <button class="wulist" onclick="">words</button> 
+      <button class="wulist" onclick="fetch_user_words('$$USER_IDENTIFIER')" >words</button> 
       <button onclick="delete_from('words')" >delete selected</button>
       <button onclick="add_to('words','word-entry')" >add</button><input id="word-entry" type="text" >
       <button id="save-words"  onclick="save_all('words')">save word changes</button>
@@ -555,6 +556,51 @@ left
         </div>
       </div>
       <div id="edit-right-windows" class="edit-right" >
+        check boxes on the left and then click <b>show links</b>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div id="trash" class="tabcontent" >
+    <h4>Discarded by Date</h4>
+    <h6>Operate on the list of windows proper - windows removed may still be available in the topic list</h6>
+    <div id="word-app" >
+      <button onclick="delete_from('trash')" >delete selected</button>
+      <button id="save-trash" onclick="internal_db_save('trash')">store discard log locally</button>
+    </div>
+    <div class="edit-ops-container">
+      <div id="edit-left-trash" class="edit-left" >
+When you drag links to the trash can, a date entry will be made for this column.
+Check the entry to see the urls. You can drag the urls out of the discard list and back to another active group.
+      </div>
+      <div id="edit-center-trash" class="edit-center" >
+        <div class="edit-center-content-wrapper">
+          topics
+          <div id="topics-grid-trash" class="edit-center-content" >
+
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          words
+          <div id="words-grid-trash" class="edit-center-content" >
+
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          domains
+          <div id="domains-grid-trash" class="edit-center-content" >
+
+          </div>  
+        </div>
+        <div class="edit-center-content-wrapper">
+          windows
+          <div id="windows-grid-trash" class="edit-center-content" >
+          </div>
+        </div>
+      </div>
+      <div id="edit-right-trash" class="edit-right" >
         check boxes on the left and then click <b>show links</b>
       </div>
     </div>
@@ -1040,6 +1086,8 @@ function openResults(currentTarget, tabName) {
     tablinks[i].className = tablinks[i].className.replace(" active", "");
   }
 
+  g_current_source_context = (tabName === "trash") ? tabName : tabName.replace("edit_","")
+
   // Show the current tab, and add an "active" class to the button that opened the tab
   document.getElementById(tabName).style.display = "block";
   currentTarget.className += " active";
@@ -1240,9 +1288,13 @@ function push_if_new(to_list,value) {
 
 
 
+const DRAG_SEP = '|^!'
 
 let g_grid_on = false
 let g_last_sort_direction = "priority"
+
+let g_current_source_context = "topics"
+
 
 let g_last_shown_list = []  // the term proper (on use reference to the category saved below g_<cat>_list)
 let g_last_shown_map = {}   // used in showing the sorted lists
@@ -1275,6 +1327,9 @@ let g_finally_display_words_map = {}
 let g_finally_display_topics_map = {}
 let g_finally_display_domains_map = {}
 let g_finally_display_windows_map = {}
+
+// handle the trash (discards of urls) ... Allow for a local record of url's that might be worth retrieving.
+let g_trash_entries = {}
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -1329,6 +1384,7 @@ let g_dirty_edits = {
 function dirty_edit_update(state,category) {
   if ( state ) {
     let vardescr = g_dirty_edits[category]
+    if ( vardescr === undefined ) return
     let el = vardescr.el
     el.style = vardescr.on_style
     //
@@ -1512,15 +1568,21 @@ function display_info_list(u_info) {
 
 function display_word_list(u_info) {
   let info = Object.keys(u_info)
+  info = info.filter(word => { return word[0] != '_' })
   //
   g_last_shown_list = [].concat(info)
   //
   let word_map = {}
   info = info.map(word => {
-    let word_links = Object.keys(u_info[word]._url_list) 
-    word_map[word] = word_links
-    word_links = word_links.join(',')
-    return `<button onclick="show_domain_links('${word_links}')">${word}</button>`
+    let infow = u_info[word]
+    if ( infow._url_list ) {
+      let word_links = Object.keys(u_info[word]._url_list)
+      word_map[word] = word_links
+      word_links = word_links.join(',')
+      return `<button onclick="show_domain_links('${word_links}')">${word}</button>`
+    } else {
+      return ""
+    }
   })
   //
   g_last_shown_map = {}
@@ -1583,6 +1645,7 @@ async function fetch_user_windows(user) {
       }
       //
       install_editing(g_window_list,"edit-left-windows","windows")
+      show_links("windows")
       //
     }
   }
@@ -1605,6 +1668,7 @@ async function fetch_user_domains(user) {
       g_finally_display_domains = front_display
       g_finally_display_domains_map = front_map
       install_editing(g_domain_list,"edit-left-domains","domains")
+      show_links("domains")
     }
   }
 }
@@ -1631,6 +1695,7 @@ async function fetch_user_topics(user) {
       g_finally_display_topics = front_display
       g_finally_display_topics_map = front_map
       install_editing(g_topic_list,"edit-left-topics","topics")
+      show_links("topics")
     }
   }
 }
@@ -1651,6 +1716,7 @@ async function fetch_user_words(user) {
       g_finally_display_words = front_display
       g_finally_display_words_map = front_map
       install_editing(g_word_list,"edit-left-words","words")
+      show_links("words")
     }
   }
 }
@@ -1692,6 +1758,11 @@ function get_edit_lists(which_list) {
       a_map = g_window_map
       break
     }
+    case "trash" : {
+      a_list = Object.keys(g_trash_entries)
+      a_map = g_trash_entries
+      break
+    }
   }
   return [a_list,a_map]
 }
@@ -1719,7 +1790,7 @@ function show_moveable_links(which_list) {
       if ( disp_links && disp_links.length ) {
 
         disp_links = disp_links.map(a_link => {
-          return `<span class="drag_link" draggable="true" style="border-bottom:solid 1px snow;margin-bottom:1px;"  ondragstart="event.dataTransfer.setData('text/plain','${value}:${a_link}')">${a_link}</span>`
+          return `<span class="drag_link" draggable="true" style="border-bottom:solid 1px snow;margin-bottom:1px;"  ondragstart="event.dataTransfer.setData('text/plain','${value}${DRAG_SEP}${a_link}')">${a_link}</span>`
         })
         links = disp_links.join("<br>")
       }
@@ -1770,37 +1841,92 @@ function show_drop_operators(which_list,context) {
 }
 
 
+function get_url_map_key(str) {
+  let seploc = str.indexOf(DRAG_SEP)
+  if ( seploc > 0  ) {
+    let [from_key,url] = str.split(DRAG_SEP,2)
+    return [from_key,url]
+  }
+  return [false,false]
+}
+
+
+
 function handle_drop_link(event,source_context,dest_context,element) {
   //
   event.preventDefault();
   //
   if ( event.dataTransfer ) {
     const data = event.dataTransfer.getData("text/plain");
-    let seploc = data.indexOf(':')
-    let from_key = data.substr(0,seploc)
-    let url = data.substr(seploc+1)
-
-    let [a_to_list,to_map] = get_edit_lists(dest_context)
-    let [a_from_list,from_map] = get_edit_lists(source_context)
-    //
-    let to_list = to_map[element]
-    let from_list = from_map[from_key]
-    //
-    if ( !(event.altKey) ) {
-      let idx = from_list.indexOf(url)
-      if ( idx >= 0 ) {
-        from_list.splice(idx,1)
+    let [from_key,url] = get_url_map_key(data)
+    if ( from_key ) {
+      //
+      let [a_to_list,to_map] = get_edit_lists(dest_context)
+      let [a_from_list,from_map] = get_edit_lists(source_context)
+      //
+      let to_list = to_map[element]
+      let from_list = from_map[from_key]
+      //
+      if ( !(event.altKey) ) {
+        let idx = from_list.indexOf(url)
+        if ( idx >= 0 ) {
+          from_list.splice(idx,1)
+        }
       }
+      if ( push_if_new(to_list,url) ) {
+        dirty_edit_update(true,dest_context)
+      }
+      //
+      show_links(dest_context)
+      show_links(source_context)
     }
-    if ( push_if_new(to_list,url) ) {
-      dirty_edit_update(true,dest_context)
-    }
-
-    show_links(dest_context)
-    show_links(source_context)
   }
 }
 
+
+function trash_to_date() {
+  // get the trash map, make sure today's date is represented...
+  let today = new Date()
+  let y = today.getFullYear()
+  let m = today.getMonth() + 1
+  let d = today.getDate()
+  //
+  today = `${y}${m}${d}`
+  _add_to("trash",today)
+  //
+  let entries = g_trash_entries[today]
+  //
+  return entries
+}
+
+function handle_drop_link_trash(event) {
+  //
+  event.preventDefault();
+  //
+  if ( event.dataTransfer ) {
+    const data = event.dataTransfer.getData("text/plain");
+    let [from_key,url] = get_url_map_key(data)
+    //
+    if ( g_current_source_context !== 'trash' ) {
+      let source_context = g_current_source_context
+      let [a_from_list,from_map] = get_edit_lists(source_context)
+      let from_list = from_map[from_key]
+      if ( from_list ) {
+        let idx = from_list.indexOf(url)
+        if ( idx >= 0 ) {
+          from_list.splice(idx,1)   // remove
+          let to_list = trash_to_date() // trash list 
+          if ( push_if_new(to_list,url) ) {
+            dirty_edit_update(true,source_context)
+          }
+          show_links('trash')
+          show_links(source_context)
+        }
+      }
+    }
+    //
+  }
+}
 
 
 function front_view(which_list) {
@@ -1846,7 +1972,7 @@ function front_view(which_list) {
 
 function show_links(which_list) {
   show_moveable_links(which_list)
-  for ( let context of ["topics","domains","words","windows"] ) {
+  for ( let context of ["topics","domains","words","windows","trash"] ) {
     show_drop_operators(which_list,context)
   }
 }
@@ -1859,41 +1985,43 @@ async function save_with_cluster(event) {
 }
 
 
-function add_to(category,value_fld_id) {
-  //
-  let value_fld = document.getElementById(value_fld_id)
-  if ( value_fld ) {
-    let value = value_fld.value
-    if ( value.length ) {
-      let [a_list,a_map] = get_edit_lists(category)
-      let b = a_map[value] 
-      if ( b === undefined ) {
-        dirty_edit_update(true,category)
+function _add_to(category,value) {
+  if ( value.length ) {
+    let [a_list,a_map] = get_edit_lists(category)
+    let b = a_map[value] 
+    if ( b === undefined ) {
+      dirty_edit_update(true,category)
 
-        //
-        let name = `op_list_${category}`
-        let checkedBoxes = document.querySelectorAll(`input[name=${name}]:checked`);
-        let len = checkedBoxes.length
-        let save_checks = []
-        for ( let i = 0; i < len; i++ ) {
-          let bx = checkedBoxes[i]
-          save_checks.push(bx.id)
-        }
+      //
+      let name = `op_list_${category}`
+      let checkedBoxes = document.querySelectorAll(`input[name=${name}]:checked`);
+      let len = checkedBoxes.length
+      let save_checks = []
+      for ( let i = 0; i < len; i++ ) {
+        let bx = checkedBoxes[i]
+        save_checks.push(bx.id)
+      }
 
-        a_map[value] = []
-        a_list.push(value)
-        //  Also, take care of the editing lists....
-        install_editing(a_list,`edit-left-${category}`,category)
-        front_view(category)
+      a_map[value] = []
+      a_list.push(value)
+      //  Also, take care of the editing lists....
+      install_editing(a_list,`edit-left-${category}`,category)
+      front_view(category)
 
-        for ( let bx_id of save_checks ) {
-          let bx_el = document.getElementById(bx_id)
-          bx_el.checked = true
-        }
+      for ( let bx_id of save_checks ) {
+        let bx_el = document.getElementById(bx_id)
+        bx_el.checked = true
       }
     }
   }
-  //
+}
+
+function add_to(category,value_fld_id) {
+  let value_fld = document.getElementById(value_fld_id)
+  if ( value_fld ) {
+    let value = value_fld.value
+    _add_to(category,value)
+  }
 }
 
 

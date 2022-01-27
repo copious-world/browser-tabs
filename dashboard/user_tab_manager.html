@@ -122,6 +122,13 @@ button {
   color:#064614;
 }
 
+.saver-help {
+  color : #FBFBC9;
+  font-size:smaller;
+  font-family:Georgia, 'Times New Roman', Times, serif;
+}
+
+
 .do_clear {
   color:#064614;
 }
@@ -189,6 +196,14 @@ button {
   border: 1px solid #ccc;
   border-top: none;
 } 
+
+
+.tabcontent-sub-tight {
+  padding: 0px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+} 
+
 .PhIOtjDr_0 {
   fill:none;
   stroke:#1c1448;
@@ -281,6 +296,27 @@ button {
 }
 
 
+.display-button {
+  font-weight:bold;
+  width:98%;
+  font-size: 0.90em;
+  padding-left: 2px;
+  padding-right: 2px;
+  margin-bottom: 4px;
+  border: darkolivegreen 1px solid;
+  border-radius: 25px;
+  cursor: pointer;
+}
+
+.display-button:hover {
+  background-color: whitesmoke;
+}
+
+.display-button:active {
+  background-color: rgb(207, 243, 192);
+}
+
+
 </style>
 <body>
   <div id="popup-content">
@@ -300,12 +336,16 @@ button {
         <div style="height:38;display:inline-block">
           <span class="user-name"  >$$USER_IDENTIFIER</span>
           <button class="help_getter" style="background-color:rgb(245, 255, 236);font-weight: bolder;font-size: larger;box-shadow: lightgoldenrodyellow;border-radius: 50%;">?</button>
+          <!-- save in a place easy to see -->
+          <button id="save-everything" onclick="save_everything(event)">save everything</button>
         </div>
       </div>
       <input id="all_tabs" type="hidden" value="" >
       <input id="window_tabs" type="hidden" value="" >
     </div>
-    <div style="background-color: rgb(250, 224, 186);padding: 4px;border: 1px solid rgb(9, 32, 82)" >
+    <div style="background-color: rgb(53, 10, 155);padding: 4px;border: 1px solid rgb(9, 32, 82)" >
+      <span class="saver-help">Any edit activity (including delete) will be saved on the 
+        server only after clicking a button requesting <span style="color:rgb(105, 241, 173);font-weight: bolder;font-size: 1.02em;" >SAVE</span></span>
         <input type="hidden" name="uemail" id="uemail" value="$$USER_IDENTIFIER" />
     </div>
   </div>
@@ -326,17 +366,19 @@ button {
       <h4>User Information</h4>
       <div style="max-width: 300px;">
         This page belongs to <span class="user-name">$$USER_IDENTIFIER</span>
-        <button id="save-everything" onclick="save_everything(event)">save everything</button>
       </div>
       <div style="grid-row: auto;height:160px;">
         <div id="user_list" class="tabcontent-sub" style="display:inline-block;height:150px;overflow:auto;width:25%" >
 
         </div>
-        <div id="user_list" class="tabcontent-sub" style="display:inline-block;height:150px;overflow:auto;width:5%;text-align: center;" >
-          <button style="width:95%" onclick="front_view('topics')">display topics</button>
-          <button style="width:95%" onclick="front_view('words')">display words</button>
-          <button style="width:95%" onclick="front_view('domains')">display domains</button>
-          <button style="width:95%" onclick="front_view('windows')">display windows</button>
+        <div id="user_list" class="tabcontent-sub-tight" style="display:inline-block;height:150px;overflow:auto;width:5%;text-align: center;" >
+          <div style="width: 100%;color:rgb(26, 36, 9);background-color:white;border-bottom: rgb(145, 99, 91) 2px solid;margin-bottom: 4px;" >
+            display
+          </div>
+          <div class="display-button" onclick="front_view('topics')">topics</div>
+          <div class="display-button" onclick="front_view('words')">words</div>
+          <div class="display-button" onclick="front_view('domains')">domains</div>
+          <div class="display-button" onclick="front_view('windows')">windows</div>
         </div>
         <div class="tabcontent-sub" id="linkcontent-sub" style="display:inline-block;height:150px;overflow:auto;width:60%" >
 
@@ -568,7 +610,6 @@ left
     <h6>Operate on the list of windows proper - windows removed may still be available in the topic list</h6>
     <div id="word-app" >
       <button onclick="delete_from('trash')" >delete selected</button>
-      <button id="save-trash" onclick="internal_db_save('trash')">store discard log locally</button>
     </div>
     <div class="edit-ops-container">
       <div id="edit-left-trash" class="edit-left" >
@@ -623,6 +664,527 @@ Check the entry to see the urls. You can drag the urls out of the discard list a
 </body>
 
 </html>
+<script >
+  // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+
+// In the following line, you should include the prefixes of implementations you want to test.
+window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+// DON'T use "var indexedDB = ..." if you're not in a function.
+// Moreover, you may need references to some window.IDB* objects:
+window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction || {READ_WRITE: "readwrite"}; // This line should only be needed if it is needed to support the object's constants for older browsers
+window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+// (Mozilla has never prefixed these objects, so we don't need window.mozIDB*)
+
+
+
+/*
+
+// autoIncrement set to true  (for this special case DB use )
+
+DB_VERSION
+DATA_STORE
+describe_data
+
+*/
+
+
+function warn(str) {
+    //
+}
+
+
+// a session is a project...
+// a session object (sessionObject) is stored in the DB and may contain parts of data
+// part_id identifies a part of the data (e.g. a layer or a component)
+
+class AppDBWrapper {
+
+    constructor(name,conf) {
+        this._can_process_db = true
+        if ( !(window.indexedDB) ) {
+            this._can_process_db = false
+            console.log("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.");
+        }
+        //
+        let self = this
+        // DATA_STORE
+        // DB_VERSION
+        // describe_data
+        if ( conf ) {
+            for ( let ky in conf ) {
+                self[ky] = conf[ky]
+            }    
+        }
+        //
+        this.db = false
+        this.current_session_name = 'none'
+        this._session_name_list = []
+        this.name = name
+        //
+    }
+
+
+    set session_name(name) {
+        this.current_session_name = name
+    }
+
+    get session_name() {
+        return this.current_session_name
+    }
+
+    get name_list() {
+        return this._session_name_list
+    }
+
+    // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
+
+    init_database() {
+        //
+        if ( !(this._can_process_db) ) return false
+        let self = this
+        let db_name = this.name
+        //
+        let p = new Promise((resolve,reject) => {
+
+            let request = window.indexedDB.open(db_name, this.DB_VERSION);
+            //
+            // <-- onerror
+            request.onerror = (event) => {
+                alert(`This web app will not store ${this.describe_data} without the use of computer storage.`)
+            };
+            
+            // <-- onsuccess
+            request.onsuccess = (event) => {
+                //
+                let db = event.target.result;
+                db.onerror = (event) => {
+                    console.log("Database error: " + event.target.error);
+                    reject(event.target.error)
+                };
+                //
+                self.db = db;
+                resolve(db)
+            }
+
+            // <-- onupgradeneeded
+            request.onupgradeneeded = (event) => {
+                //
+                let db = event.target.result;
+                //
+                try {
+                    let sessionObjectStore = db.createObjectStore(this.DATA_STORE, { autoIncrement : true });
+                    sessionObjectStore.createIndex("name", "name", { unique: true });
+                    sessionObjectStore.createIndex("sess_date_time", "sess_date_time", { unique: true });
+                } catch (e) {
+                }
+            //
+            };
+        })  // end of promise
+        //
+        return p
+    }
+
+
+    // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
+
+    //      load_name_list
+    // -- 
+    load_name_list() {
+        if ( !(this.db) ) return
+        //
+        let transaction = this.db.transaction(this.DATA_STORE, "readonly");
+        let dataStore = transaction ? transaction.objectStore(this.DATA_STORE) : false
+        //
+        if ( !(dataStore) ) return false
+        let p = new Promise((resolve,reject) => {
+            this._session_name_list = []
+            let myIndex = dataStore.index('name');
+            myIndex.openCursor().onsuccess = (event) => {
+                let cursor = event.target.result;
+                if ( cursor ) {
+                    this._session_name_list.push(cursor.value.name)
+                    cursor.continue();
+                } else {
+                    this.application_update_session_name_selections(this.current_session_name,this._session_name_list)
+                    resolve(true)
+                }
+            }
+        })
+        //
+        return p
+    }
+
+    // _apply_find_by_name
+    //  -- a generic that calls success_callback when an element matches the index, or not_found_callback otherwise.
+    //
+    _apply_find_by_name(sess_name, store, success_callback, not_found_callback) {
+        let nameIndex = store.index('name');
+        nameIndex.get(sess_name).onsuccess = (evt) => {
+            let value = evt.target.result;
+            if ( value ) {
+                if ( success_callback ) success_callback(value,nameIndex);
+            } else {
+                if ( not_found_callback ) not_found_callback();
+            }
+        };
+    }
+
+    // _add_session_to_db
+    //  -- adds the session object to the db, sets up the basic fields... 
+    //
+    _add_session_to_db(dataStore,application_op,part_id) {
+        //
+        let sessionObj = {
+            'name' : this.current_session_name,
+            'sess_date_time' : '' + Date.now(),
+            'data' : { },
+            'hashes' : { },
+            'edit_order' : []
+        }
+        //
+        if ( part_id ) sessionObj.edit_order.push(part_id)
+        //
+        if ( (application_op !== undefined) && (typeof application_op === 'function') ) {
+            application_op(sessionObj)
+        }
+        let request = dataStore.add(sessionObj);
+        return request
+    }
+  
+
+    // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
+
+    // add_data -- 
+    //  Parameters: blob_data -- data stored as part of the session
+    //              session id could be a layer....
+    add_data(blob_data,part_id) {
+        if ( !(this._can_process_db) ) return false
+        if ( !(this.db) ) {
+          console.log(`db not initialized :: AppDBWrapper.add_data`)
+          return;
+        }
+        //
+        let transaction = this.db.transaction(this.DATA_STORE, "readwrite");
+        if ( !(transaction) ) return false
+        let dataStore = transaction.objectStore(this.DATA_STORE);
+        if ( !(dataStore) ) return false
+
+        let p = new Promise((resolve,reject) => {
+            let self = this
+            // update_list_callback
+            let update_list_callback = (value,dbIndex) => {     // if found update
+                if ( !dbIndex || (typeof value === "undefined") ) {
+                    resolve(false)
+                    return;
+                }
+                let keyRangeValue = IDBKeyRange.only(value.name);
+                dbIndex.openCursor(keyRangeValue).onsuccess = (event) => {
+                    let cursor = event.target.result;
+                    if ( cursor ) {
+                        // existing session 
+                        let sessionObj = cursor.value
+                        //
+                        let blob_url = (typeof blob_data === 'string') ? blob_data : URL.createObjectURL(blob_data);
+                        // map_id = part_id
+                        // store revised data
+                        sessionObj.data[part_id] = blob_data
+                        // make sure the structure has been set up if not already
+                        if ( sessionObj.hashes[part_id] === undefined ) {
+                            sessionObj.hashes[part_id] = {}
+                        }
+                        if ( sessionObj.hashes[part_id].op_history === undefined ) {
+                            sessionObj.hashes[part_id].op_history = []
+                        }
+                        // record the order in which sessions (layers) have been edited
+                        sessionObj.edit_order.push(part_id)
+                        //
+                        // update IndexedDB
+                        const request = cursor.update(sessionObj);
+                        request.onsuccess = async () => {
+                            try {
+                                self.application_data_update(blob_url,part_id,blob_data)  // application handling of data e.g visual rep
+                            } catch (e) {
+                                console.log(e)
+                            } finally {
+                                resolve(true)
+                            }
+                        };
+
+                        request.onerror = (event) => {
+                            resolve(false)
+                        }
+                        //
+                    } else {
+                        resolve(false)
+                    }
+                }
+            }
+            // add_new_callback
+            let add_new_callback = () => {          // if not found add a new one
+                //
+                let blob_url = (typeof blob_data === 'string') ? blob_data : URL.createObjectURL(blob_data);
+                //
+                let application_op = (sessionObj) => {
+                    //
+                    sessionObj.data[part_id] = blob_data
+                    if ( sessionObj.hashes[part_id] === undefined ) {
+                        sessionObj.hashes[part_id] = {}
+                    }
+                    sessionObj.hashes[part_id].op_history = []
+                    //
+                } 
+                //
+                let request = self._add_session_to_db(dataStore,application_op,part_id)
+                if ( request ) {
+                    request.onsuccess = (event) => {
+                        self.application_data_update(blob_url,part_id,blob_data)  // application handling of data e.g visual rep
+                        resolve(true)
+                    };
+                    request.onerror = (event) => {
+                        resolve(false)
+                    }
+                }
+                //
+            }
+            //
+            this._apply_find_by_name(this.current_session_name, dataStore, update_list_callback, add_new_callback)    
+        })
+        //
+        return p
+    }
+
+
+    //  remove_data: 
+    //      Parameters: part_id -- remove a sections of the data kept by the session named sess_name
+    //                  sess_name -- A session or separate project or publication...
+    //
+    remove_data(part_id,sess_name) {
+        //
+        if ( !(this._can_process_db) ) return false
+        //
+        if ( this.db === null ) {
+          console.log("db not initialized :: remove_audio_data")
+          return false;
+        }
+        //
+        let transaction = this.db.transaction(this.DATA_STORE, "readwrite");
+        if ( !(transaction) ) return false
+        let dataStore = transaction.objectStore(this.DATA_STORE);
+        if ( !(dataStore) ) return false
+        //
+
+        let p = new Promise((resolve,reject) => {
+            // remove_from_list_callback
+            let remove_from_list_callback = async (value,dbIndex) => {
+                let keyRangeValue = IDBKeyRange.only(value.name);
+                dbIndex.openCursor(keyRangeValue).onsuccess = (event) => {
+                    let cursor = event.target.result;
+                    if ( cursor ) {
+                        let sessionObj = cursor.value
+                        delete sessionObj.data[part_id]
+                        //
+                        const request = cursor.update(sessionObj);
+                        request.onsuccess = async () => {
+                            //  item has been removed
+                            console.log(`deleted ${part_id}`)
+                            await this.app_secure_total_session(sess_name)
+                            resolve(true)
+                        };
+                        //
+                        request.onerror = (e) => {
+                            resolve(false)
+                        }
+                    }
+                    resolve(false)
+                }
+            }
+
+            // not_found_callback 
+            let not_found_callback = () => {
+                warn(`The session ${sess_name} is not in the database`)
+                resolve(false)
+            }
+
+            this._apply_find_by_name(sess_name, dataStore, remove_from_list_callback, not_found_callback)
+        })
+
+        return p
+    }
+      
+    //  remove_data: 
+    //      Parameters: part_id -- remove a sections of the data kept by the session named sess_name
+    //                  sess_name -- A session or separate project or publication...
+    //
+    get_data(part_id,sess_name) {
+        //
+        if ( !(this._can_process_db) ) return false
+        //
+        if ( this.db === null ) {
+          console.log("db not initialized :: remove_audio_data")
+          return false;
+        }
+        //
+        let transaction = this.db.transaction(this.DATA_STORE, "readwrite");
+        if ( !(transaction) ) return false
+        let dataStore = transaction.objectStore(this.DATA_STORE);
+        if ( !(dataStore) ) return false
+        //
+
+        let p = new Promise((resolve,reject) => {
+            // remove_from_list_callback
+            let get_from_list_callback = async (value,dbIndex) => {
+                let keyRangeValue = IDBKeyRange.only(value.name);
+                dbIndex.openCursor(keyRangeValue).onsuccess = (event) => {
+                    let cursor = event.target.result;
+                    if ( cursor ) {
+                        let sessionObj = cursor.value
+                        let value =  sessionObj.data[part_id]
+                        if ( value === undefined ) {
+                            resolve(false)
+                        } else {
+                            resolve(value)
+                        }
+                    }
+                    resolve(false)
+                }
+            }
+        
+            // not_found_callback 
+            let not_found_callback = () => {
+                warn(`The session ${sess_name} is not in the database`)
+                resolve(false)
+            }
+        
+            this._apply_find_by_name(sess_name, dataStore, get_from_list_callback, not_found_callback)
+        })
+
+        return p
+    }
+      
+ 
+    // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
+
+    //  get_session: 
+    //      Parameters: sess_name -- A session or separate project or publication...
+    //  Returns the object controlling all the data within the session.
+    get_session(sess_name) {
+        //
+        if ( !(this._can_process_db) ) return false
+        //
+        if ( this.db === null ) {
+          console.log("db not initialized :: get_data")
+          return false;
+        }
+        //
+        let transaction = this.db.transaction(this.DATA_STORE, "readwrite");
+        if ( !(transaction) ) return false
+        let dataStore = transaction.objectStore(this.DATA_STORE);
+        if ( !(dataStore) ) return false
+        //
+        let p = new Promise((resolve,reject) => {
+          //
+          // get_elem_callback
+          let get_elem_callback = (value,dbIndex) => {          // element.name == sess_name exists
+            //
+            let keyRangeValue = IDBKeyRange.only(value.name);
+            //
+            dbIndex.openCursor(keyRangeValue).onsuccess = (event) => {
+              let cursor = event.target.result;
+              if ( cursor ) {
+                let sessionObj = cursor.value
+                resolve(sessionObj)
+              } else {
+                reject(null)
+              }
+            }
+          }
+          //
+          // not_found_callback
+          let not_found_callback = () => {                       // element.name == sess_name  NOT FOUND
+            reject(null)
+          }
+          //
+          this._apply_find_by_name(sess_name, dataStore, get_elem_callback, not_found_callback)
+        })
+        //
+        return p
+    }
+
+     
+    //  delete_session: 
+    //      Parameters: sess_name -- A session or separate project or publication...
+    //
+    delete_session(sess_name) {
+        //
+        if ( !(this._can_process_db) ) return false
+
+        if ( sess_name !== 'none ') {
+            if ( this.db === null ) {
+                console.log("db not initialized :: delete_session")
+                return false;
+            }
+            //
+            let transaction = this.db.transaction(this.DATA_STORE, "readwrite");
+            if ( !(transaction) ) return false
+            let dataStore = transaction.objectStore(this.DATA_STORE);
+            if ( !(dataStore) ) return false
+        
+            let p = new Promise((resolve,reject) => {
+                // delete_from_list_callback
+                let delete_from_list_callback = (value,dbIndex) => {
+                    //
+                    let keyRangeValue = IDBKeyRange.only(value.name);
+                    //
+                    dbIndex.openCursor(keyRangeValue).onsuccess = (event) => {
+                        let cursor = event.target.result;
+                        if ( cursor ) {
+                            let request = cursor.delete();
+                            request.onsuccess = () => {
+                                this.current_session_name = 'none'   /// here last
+                                this.load_name_list()
+                                this.application_revise_current_session(this.current_session_name)
+                                resolve(true)
+                            };
+                        }
+                        resolve(false)
+                    }
+                }
+                //
+                let not_found_callback = () => {
+                    warn(`The session ${sess_name} is not in the database`)
+                    resolve(false)
+                }
+                //
+                this._apply_find_by_name(sess_name, dataStore, delete_from_list_callback, not_found_callback)    
+            })
+            //
+            return p
+        }
+        return false
+    }
+
+
+    // // // // // // // // // // // // // // // // // // // // // // // // // // // // 
+
+    application_data_update(blob_url,part_id,blob_data) {
+        // implemented by derived method (override)
+    }
+
+    async app_secure_total_session(sess_name) {
+         // implemented by derived method (override)
+    }
+
+    application_revise_current_session(sess_name) {
+        // implemented by derived method (override)
+    }
+
+    application_update_session_name_selections(sess_name,name_list) {
+
+    }
+
+}
+
+</script>
 <script>
 
 const SERVER_PUT_TABS = "/put_tabs"
@@ -652,6 +1214,21 @@ let g_keep_data_around = {
     "window_tab_list" : "nada"
   }
 }
+
+
+let trashDB = false
+async function db_startup() {
+  trashDB = new AppDBWrapper("USER_TABS",{
+    "DATA_STORE" : "TRASH",
+    "DB_VERSION" : 2,
+    "describe_data" : "$$USER_IDENTIFIER"
+  })
+  if ( trashDB ) {
+    await trashDB.init_database()
+    await initialize_trashy_display()
+  }
+}
+
 
 
 // Generic method for querying the server ... temporary tab storage....
@@ -980,20 +1557,6 @@ function get_cluster_point_list() {
   return (points.length ? points : undefined)
 }
 
-async function save_tabs(cluster_points) {
-  if ( cluster_points && cluster_points.length ) {
-    await tab_field_saver('tab_list',SERVER_PUT_TABS,cluster_points)
-  } else {
-    await tab_field_saver('tab_list',SERVER_PUT_TABS)
-  }
-}
-
-
-
-async function save_window() {
-}
-
-
 
 
 
@@ -1182,7 +1745,12 @@ function inject_topic_into_dashboard(package_name,link_package) {
 }
 
 
-function save_everything(ev) {
+
+/// SAVE STUFF... ....
+
+
+
+async function save_everything(ev) {
 
   console.log("save_everything::  ")
 
@@ -1203,14 +1771,72 @@ function save_everything(ev) {
     //
   }
 
+  for ( let category of ["topics", "words", "domains", "windows"] ) {
+    await save_all(category)
+  }
+
   dirty_edit_update(false)
 }
-  
-function delete_everything() {
-  let email = g_application_mail
-  if ( email ) {
+
+
+async function save_with_cluster(event) {
+  let cluster_points = get_cluster_point_list()
+  if ( cluster_points ) {
+    await save_tabs(cluster_points)
   }
 }
+
+
+
+async function save_tabs(cluster_points) {
+  if ( cluster_points && cluster_points.length ) {
+    await tab_field_saver('tab_list',SERVER_PUT_TABS,cluster_points)
+  } else {
+    await tab_field_saver('tab_list',SERVER_PUT_TABS)
+  }
+}
+
+
+
+async function save_window() {
+}
+
+
+async function save_user_info(user,category,data) {
+  let disp_drop = document.getElementById("user-data")
+  if ( disp_drop ) {
+    let postable = {
+      "cmd" : `user-save-${category}`,
+      "user" : user,
+      "data" : data
+    }
+    let response = await postData(USER_ADMIN_CMD,postable)
+    if ( response.OK !== "true" ) {
+      console.log("oops")
+    }
+  }
+}
+
+
+// message to the server to update the sets
+// belonging to this user....
+async function save_all(category) {
+  let [a_list,a_map] = get_edit_lists(category)
+  if ( a_map ) {
+    await save_user_info('$$USER_IDENTIFIER',category,a_map)
+    dirty_edit_update(false,category)
+  }
+}
+
+
+
+
+/// DELETE --- Delete is just local editing... the user is requested to save state.
+
+
+
+
+
 
 
 
@@ -1290,7 +1916,7 @@ function push_if_new(to_list,value) {
 
 const DRAG_SEP = '|^!'
 
-let g_grid_on = false
+let g_grid_on = true
 let g_last_sort_direction = "priority"
 
 let g_current_source_context = "topics"
@@ -1884,6 +2510,40 @@ function handle_drop_link(event,source_context,dest_context,element) {
 }
 
 
+async function initialize_trashy_display() {
+  if ( trashDB ) {
+    trashDB.session_name = "$$USER_IDENTIFIER"
+    try {
+      let db_el = await trashDB.get_session("$$USER_IDENTIFIER")
+      let store_trash = db_el.data
+      g_trash_entries = {}
+      for ( let adate in store_trash ) {
+        g_trash_entries[adate] = JSON.parse(store_trash[adate])
+      }
+      let a_list = Object.keys(g_trash_entries)
+      if ( a_list.length ) {
+        let category = 'trash'
+        install_editing(a_list,`edit-left-${category}`,category)
+      }
+    } catch ( e ) {
+      console.log(e)
+    }
+  }
+}
+
+
+async function trash_to_db(the_date) {
+  if ( trashDB ) {
+    let trash_rep = JSON.stringify(g_trash_entries[the_date])
+    try {
+      await trashDB.add_data(trash_rep,the_date)
+    } catch (e) {
+      console.log(e)
+    }
+  }
+}
+
+
 function trash_to_date() {
   // get the trash map, make sure today's date is represented...
   let today = new Date()
@@ -1896,7 +2556,7 @@ function trash_to_date() {
   //
   let entries = g_trash_entries[today]
   //
-  return entries
+  return [today,entries]
 }
 
 function handle_drop_link_trash(event) {
@@ -1915,10 +2575,11 @@ function handle_drop_link_trash(event) {
         let idx = from_list.indexOf(url)
         if ( idx >= 0 ) {
           from_list.splice(idx,1)   // remove
-          let to_list = trash_to_date() // trash list 
+          let [the_date,to_list] = trash_to_date() // trash list 
           if ( push_if_new(to_list,url) ) {
             dirty_edit_update(true,source_context)
           }
+          trash_to_db(the_date)
           show_links('trash')
           show_links(source_context)
         }
@@ -1978,11 +2639,6 @@ function show_links(which_list) {
 }
 
 
-
-async function save_with_cluster(event) {
-  let cluster_points = get_cluster_point_list()
-  await save_tabs(cluster_points)
-}
 
 
 function _add_to(category,value) {
@@ -2052,34 +2708,14 @@ function delete_from(category) {
     install_editing(a_list,`edit-left-${category}`,category)
     show_links(category)
     front_view(category)
+    if ( category === "trash" ) {
+      let [the_date,to_list] = trash_to_date() // trash list 
+      trash_to_db(the_date)
+    }
     //
   }
 }
 
-
-async function save_user_info(user,category,data) {
-  let disp_drop = document.getElementById("user-data")
-  if ( disp_drop ) {
-    let postable = {
-      "cmd" : `user-save-${category}`,
-      "user" : user,
-      "data" : data
-    }
-    let response = await postData(USER_ADMIN_CMD,postable)
-    if ( response.OK !== "true" ) {
-      console.log("oops")
-    }
-  }
-}
-
-
-// message to the server to update the sets
-// belonging to this user....
-async function save_all(category) {
-  let [a_list,a_map] = get_edit_lists(category)
-  await save_user_info('$$USER_IDENTIFIER',category,a_map)
-  dirty_edit_update(false,category)
-}
 
 
 function show_status(msg) {
@@ -2089,5 +2725,6 @@ function show_status(msg) {
 prep_updates()
 
 fetch_all()
+db_startup()
 
 </script>

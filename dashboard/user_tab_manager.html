@@ -1802,13 +1802,14 @@ async function save_window() {
 }
 
 
-async function save_user_info(user,category,data) {
+async function save_user_info(user,category,data,deleted) {
   let disp_drop = document.getElementById("user-data")
   if ( disp_drop ) {
     let postable = {
       "cmd" : `user-save-${category}`,
       "user" : user,
-      "data" : data
+      "data" : data,
+      "deleted" : deleted
     }
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK !== "true" ) {
@@ -1822,8 +1823,9 @@ async function save_user_info(user,category,data) {
 // belonging to this user....
 async function save_all(category) {
   let [a_list,a_map] = get_edit_lists(category)
+  let deleted = get_deleted(category)
   if ( a_map ) {
-    await save_user_info('$$USER_IDENTIFIER',category,a_map)
+    await save_user_info('$$USER_IDENTIFIER',category,a_map,deleted)
     dirty_edit_update(false,category)
   }
 }
@@ -1956,6 +1958,12 @@ let g_finally_display_windows_map = {}
 
 // handle the trash (discards of urls) ... Allow for a local record of url's that might be worth retrieving.
 let g_trash_entries = {}
+let g_deleted = {
+  "topics" : [],
+  "words" : [],
+  "domains" : [],
+  "windows" : []
+}
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -2042,6 +2050,30 @@ function prep_updates() {
     let el = document.getElementById(el_id)
     vardescr.el = el
     vardescr.state = false
+  }
+}
+
+
+
+function get_deleted(category) {
+  let dels = g_deleted[category]
+  return dels
+}
+
+
+function insert_deleted(category,key) {
+  let dels = g_deleted[category]
+  if ( dels ) {
+    if ( dels.indexOf(key) < 0 ) {
+      dels.push(key)
+    }
+  }
+}
+
+
+function add_all_deletes(category,del_vals) {
+  for ( let val of del_vals )  {
+    insert_deleted(category,val)
   }
 }
 
@@ -2703,6 +2735,8 @@ function delete_from(category) {
 
       }
     }
+
+    add_all_deletes(category,sel_vals)
 
     //  Also, take care of the editing lists....
     install_editing(a_list,`edit-left-${category}`,category)

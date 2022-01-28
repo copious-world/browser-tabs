@@ -1928,6 +1928,18 @@ let g_last_shown_list = []  // the term proper (on use reference to the category
 let g_last_shown_map = {}   // used in showing the sorted lists
 let g_last_list_rendering = []   /// g_finally_display_<category>
 
+
+
+// Will not op on words --- leave it up to ML 
+// Topics subset Words  --- ops on topics get data from words,  e.g. descriptions and titles
+// domains do not supply titles --- windows or words may --- maybe stored titles with domains....
+
+
+let g_word_delivered = {}   // words exactly what came from the server
+let g_topic_delivered = {}  // topics exactly what came from the server
+let g_domain_delivered = {} // domains exactly what came from the server
+let g_window_delivered = {} // windows exactly what came from the server
+
 // list of terms (not objects -- just strings)
 let g_word_list = [] // for making the edit displays
 let g_topic_list = [] // for making the edit displays
@@ -2204,7 +2216,13 @@ function display_info_list(u_info) {
   g_last_shown_list = [].concat(info)
   //
   info = info.map(dom => {
-    let dom_links = u_info[dom].join(',')
+    let links = ""
+    if ( Array.isArray(u_info[dom]) ) {
+      links = Object.keys(u_info[dom])
+    } else {
+      links = u_info[dom]
+    }
+    let dom_links = links.join(',')
     console.log(dom_links)
     return `<button onclick="show_domain_links('${dom_links}')">${dom}</button>`
   })
@@ -2234,7 +2252,7 @@ function display_word_list(u_info) {
   info = info.map(word => {
     let infow = u_info[word]
     if ( infow._url_list ) {
-      let word_links = Object.keys(u_info[word]._url_list)
+      let word_links = Object.keys(u_info[word]._url_list)   // these are <url,descr pairs>
       word_map[word] = word_links
       word_links = word_links.join(',')
       return `<button onclick="show_domain_links('${word_links}')">${word}</button>`
@@ -2258,6 +2276,46 @@ function display_word_list(u_info) {
   return [[].concat(g_last_shown_list),word_map,info,g_last_shown_map]
 }
 
+/*
+let g_window_delivered = {} // windows exactly what came from the server
+*/
+
+function _place_windows(u_info) {
+  g_last_shown_list = []
+  g_window_map = {}
+  let info = u_info.map(window_descr => {
+    let wtabs = window_descr.tabs
+    if ( wtabs ) {
+      wtabs = wtabs.map((ldescr) => {
+        let link = ldescr.url       // these are <url,descr> pairs
+        return link
+      })
+      g_window_map[window_descr.descr] = wtabs
+      let dom_links = wtabs.join(',')
+      g_last_shown_list.push(window_descr.descr)
+      return `<button onclick="show_window_links('${dom_links}')">${window_descr.descr}</button>`
+    }
+  })
+  g_window_list = [].concat(g_last_shown_list)
+  // PUT DATA INTO THE DIPSPLAY MAP
+  g_last_shown_map = {}
+  for ( let i = 0; i < info.length; i++ ) {
+    g_last_shown_map[g_last_shown_list[i]] = info[i]
+  }
+  g_finally_display_windows = info
+  g_finally_display_windows_map = g_finally_display_windows
+  //
+  finally_display(info)
+  //
+  let list_choice = document.getElementById("user-info-id")
+  if ( list_choice ) {
+    list_choice.innerHTML = "windows"
+  }
+  //
+  install_editing(g_window_list,"edit-left-windows","windows")
+  show_links("windows")
+  //
+}
 
 
 // WINDOW DATA SHAPE IS DIFFERENT 
@@ -2270,43 +2328,25 @@ async function fetch_user_windows(user) {
     }
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
-      let u_info = response.data    /// an array...
-      g_last_shown_list = []
-      g_window_map = {}
-      let info = u_info.map(window_descr => {
-        let wtabs = window_descr.tabs
-        if ( wtabs ) {
-          wtabs = wtabs.map((ldescr) => {
-            let link = ldescr.url
-            return link
-          })
-          g_window_map[window_descr.descr] = wtabs
-          let dom_links = wtabs.join(',')
-          g_last_shown_list.push(window_descr.descr)
-          return `<button onclick="show_window_links('${dom_links}')">${window_descr.descr}</button>`
-        }
-      })
-      g_window_list = [].concat(g_last_shown_list)
-      // PUT DATA INTO THE DIPSPLAY MAP
-      g_last_shown_map = {}
-      for ( let i = 0; i < info.length; i++ ) {
-        g_last_shown_map[g_last_shown_list[i]] = info[i]
-      }
-      g_finally_display_windows = info
-      g_finally_display_windows_map = g_finally_display_windows
-      //
-      finally_display(info)
-      //
-      let list_choice = document.getElementById("user-info-id")
-      if ( list_choice ) {
-        list_choice.innerHTML = "windows"
-      }
-      //
-      install_editing(g_window_list,"edit-left-windows","windows")
-      show_links("windows")
-      //
+      g_window_delivered = response.data
+      _place_windows(g_window_delivered)
     }
   }
+}
+
+
+/*
+let g_domain_delivered = {} // domains exactly what came from the server
+*/
+
+function _place_domains(data) {
+  let [a_list, a_map, front_display,front_map] = display_info_list(data)
+  g_domain_list = a_list
+  g_domain_map = a_map
+  g_finally_display_domains = front_display
+  g_finally_display_domains_map = front_map
+  install_editing(g_domain_list,"edit-left-domains","domains")
+  show_links("domains")
 }
 
 
@@ -2320,13 +2360,8 @@ async function fetch_user_domains(user) {
     }
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
-      let [a_list, a_map, front_display,front_map] = display_info_list(response.data)
-      g_domain_list = a_list
-      g_domain_map = a_map
-      g_finally_display_domains = front_display
-      g_finally_display_domains_map = front_map
-      install_editing(g_domain_list,"edit-left-domains","domains")
-      show_links("domains")
+      g_domain_delivered = response.data
+      _place_domains(g_domain_delivered)
     }
   }
 }
@@ -2338,6 +2373,22 @@ let g_domain_map = {} // for making the edit displays
 let g_window_map = {} // for making the edit displays
 */
 
+/*
+let g_topic_delivered = {}  // topics exactly what came from the server
+*/
+
+
+function _place_topics(data) {
+  let [a_list, a_map, front_display,front_map] = display_info_list(data)
+  g_topic_list = a_list
+  g_topic_map = a_map
+  g_finally_display_topics = front_display
+  g_finally_display_topics_map = front_map
+  install_editing(g_topic_list,"edit-left-topics","topics")
+  show_links("topics")
+}
+
+
 async function fetch_user_topics(user) {
   let disp_drop = document.getElementById("user-data")
   if ( disp_drop ) {
@@ -2347,15 +2398,25 @@ async function fetch_user_topics(user) {
     }
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
-      let [a_list, a_map, front_display,front_map] = display_info_list(response.data)
-      g_topic_list = a_list
-      g_topic_map = a_map
-      g_finally_display_topics = front_display
-      g_finally_display_topics_map = front_map
-      install_editing(g_topic_list,"edit-left-topics","topics")
-      show_links("topics")
+      g_topic_delivered = response.data
+      _place_topics(g_topic_delivered)
     }
   }
+}
+
+/*
+let g_word_delivered = {}   // words exactly what came from the server
+*/
+
+
+function _place_words(data) {
+  let [a_list, a_map, front_display,front_map] = display_word_list(data)
+  g_word_list = a_list
+  g_word_map = a_map
+  g_finally_display_words = front_display
+  g_finally_display_words_map = front_map
+  install_editing(g_word_list,"edit-left-words","words")
+  show_links("words")
 }
 
 
@@ -2368,13 +2429,8 @@ async function fetch_user_words(user) {
     }
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
-      let [a_list, a_map, front_display,front_map] = display_word_list(response.data)
-      g_word_list = a_list
-      g_word_map = a_map
-      g_finally_display_words = front_display
-      g_finally_display_words_map = front_map
-      install_editing(g_word_list,"edit-left-words","words")
-      show_links("words")
+      g_word_delivered = response.data
+      _place_words(g_word_delivered)
     }
   }
 }

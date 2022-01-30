@@ -1822,7 +1822,8 @@ async function save_user_info(user,category,data,deleted) {
 // message to the server to update the sets
 // belonging to this user....
 async function save_all(category) {
-  let [a_list,a_map] = get_edit_lists(category)
+  //let [a_list,a_map] = get_edit_lists(category)
+  let a_map = g_manage_delivered[category]
   let deleted = get_deleted(category)
   if ( a_map ) {
     await save_user_info('$$USER_IDENTIFIER',category,a_map,deleted)

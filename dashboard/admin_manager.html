@@ -1030,10 +1030,7 @@ function make_user_active(el) {
   let el_buttons = `
   <span class="user_name" >${el} </span>
   <button class="user_control_button" onclick="fetch_user_info('${el}')">fetch info</button> 
-  <button class="user_control_button" onclick="fetch_user_domains('${el}')">domains</button> 
-  <button class="user_control_button" onclick="fetch_user_topics('${el}')" >topics</button> 
-  <button class="user_control_button" onclick="fetch_user_words('${el}')">words</button> 
-  <button class="user_control_button" onclick="fetch_user_windows('${el}')">windows</button> 
+  <a class="user_control_button" href="../dashboard/${el}" target="TAB_CLUSTER_${el}" >view dashboard</a>
   <button class="user_control_button" onclick="block_user('${el}')" >block</button> 
   <button class="user_control_button" onclick="unblock_user('${el}')" >unblock</button>
   `

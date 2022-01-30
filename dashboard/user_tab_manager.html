@@ -1915,6 +1915,16 @@ function push_if_new(to_list,value) {
 }
 
 
+// { "url" : url, "title" : title }
+function set_if_new(to_map,tab_obj) {
+  if ( to_map[tab_obj.url] === undefined ) {
+    to_map[tab_obj.url] = tab_obj.title
+    return true
+  }
+  return false
+}
+
+
 
 const DRAG_SEP = '|^!'
 
@@ -2100,23 +2110,6 @@ function add_all_deletes(category,del_vals) {
 }
 
 
-/*
-
-"_word_list": {
-  "master": {
-    "_word": "master",
-    "_count": 6,
-    "_url_list": {
-      "https://github.com/ipfs/devgrants/blob/master/open-grants/README.md": "devgrants/README.md at master · ipfs/devgrants · GitHub",
-      "https://github.com/filecoin-project/specs/tree/master/content": "specs/content at master · filecoin-project/specs",
-      "https://github.com/yehia67/IPFS-Tangle-Database-System/tree/master/actions/Functions": "IPFS-Tangle-Database-System/actions/Functions at master · yehia67/IPFS-Tangle-Database-System · GitHub",
-      "https://github.com/ipfs/js-ipfs/tree/master/docs/core-api": "js-ipfs/docs/core-api at master · ipfs/js-ipfs · GitHub",
-      "https://github.com/ipfs/js-ipfs/blob/master/docs/core-api/PIN.md": "js-ipfs/PIN.md at master · ipfs/js-ipfs · GitHub",
-      "https://github.com/peter-suggate/wasm-audio-app/blob/master/src/PitchNode.js": "wasm-audio-app/PitchNode.js at master · peter-suggate/wasm-audio-app · GitHub"
-    },
-    "keep": true
-  },
-*/
 /// e.g. server side (from admin, via /user/:uid) 
 ///       _all_topics is g_manage_delivered["topics"]  -- all_topics[topic] -> {<url,title>} 
 //
@@ -2126,9 +2119,10 @@ function change_save_state_move(url,title,source_context,dest_context,dest_holdi
       case "topics":
       case "domains": {
         let c_data = g_manage_delivered[dest_context]
-        if ( c_data[url] === undefined ) {
-          c_data[url] = title         /// maintain url,title pairing
+        if ( c_data[dest_holding_element] === undefined ) {
+          c_data[dest_holding_element] = {}         /// maintain url,title pairing
         }
+        c_data[dest_holding_element][url] = title
         break
       }
       case "words" : {
@@ -2148,8 +2142,8 @@ function change_save_state_move(url,title,source_context,dest_context,dest_holdi
         let c_data_list = g_manage_delivered[dest_context]   // this should be an array
         if ( c_data_list ) {
           let c_data_entry = c_data_list.find((entry) => {
-            if ( entry.link ) {
-              if ( entry.link === dest_holding_element ) {
+            if ( entry.descr ) {
+              if ( entry.descr === dest_holding_element ) {
                 return true
               }
             }
@@ -2157,15 +2151,15 @@ function change_save_state_move(url,title,source_context,dest_context,dest_holdi
           })
           if ( c_data_entry ) {
             let c_data = c_data_entry.tabs.find((entry) => {
-                                                if ( entry.link ) {
-                                                  if ( entry.link === url ) {
+                                                if ( entry.url ) {
+                                                  if ( entry.url === url ) {
                                                     return true
                                                   }
                                                 }
                                                 return false
                                               })
-            if ( c_data ) {
-              c_data.push({
+            if ( !c_data ) {
+              c_data_entry.tabs.push({
                 "url" : url,
                 "title" : title
               })
@@ -2182,8 +2176,8 @@ function change_save_state_move(url,title,source_context,dest_context,dest_holdi
       case "topics":
       case "domains": {
         let c_data = g_manage_delivered[source_context]
-        if ( c_data[url] !== undefined ) {
-          delete c_data[url]
+        if ( c_data[source_holding_element] !== undefined ) {
+          delete c_data[source_holding_element][url]
         }
         break
       }
@@ -2200,31 +2194,32 @@ function change_save_state_move(url,title,source_context,dest_context,dest_holdi
         }
         break;
       }
-      case "window" : {
+      case "windows" : {
         let c_data_list = g_manage_delivered[source_context]   // this should be an array
         if ( c_data_list ) {
           let c_data_entry = c_data_list.find((entry) => {
-            if ( entry.link ) {
-              if ( entry.link === source_holding_element ) {
-                return true
-              }
-            }
-            return false
-          })
+                                                  if ( entry.descr ) {
+                                                    if ( entry.descr === source_holding_element ) {
+                                                      return true
+                                                    }
+                                                  }
+                                                  return false
+                                                })
           if ( c_data_entry ) {
             let c_data_index = c_data_entry.tabs.findIndex((entry) => {
-                                                if ( entry.link ) {
-                                                  if ( entry.link === url ) {
+                                                if ( entry.url ) {
+                                                  if ( entry.url === url ) {
                                                     return true
                                                   }
                                                 }
                                                 return false
                                               })
-          if ( c_data_index >= 0 ) {
-            c_data_entry.tabs.splice(c_data_index,1)
-          }
-        }                                              
-        break;
+            if ( c_data_index >= 0 ) {
+              c_data_entry.tabs.splice(c_data_index,1)
+            }
+          }                                            
+          break;
+        }
       }
     }
   }
@@ -2360,9 +2355,9 @@ function display_info_list(u_info) {
   info = info.map(dom => {
     let links = ""
     if ( Array.isArray(u_info[dom]) ) {
-      links = Object.keys(u_info[dom])
-    } else {
       links = u_info[dom]
+    } else {
+      links = Object.keys(u_info[dom])      
     }
     let dom_links = links.join(',')
     console.log(dom_links)
@@ -2471,7 +2466,7 @@ async function fetch_user_windows(user) {
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
       g_window_delivered = response.data
-      g_manage_delivered["windows"] = g_word_delivered
+      g_manage_delivered["windows"] = g_window_delivered
       _place_windows(g_window_delivered)
     }
   }
@@ -2504,7 +2499,7 @@ async function fetch_user_domains(user) {
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
       g_domain_delivered = response.data
-      g_manage_delivered["domains"] = g_word_delivered
+      g_manage_delivered["domains"] = g_domain_delivered
       _place_domains(g_domain_delivered)
     }
   }
@@ -2543,7 +2538,7 @@ async function fetch_user_topics(user) {
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
       g_topic_delivered = response.data
-      g_manage_delivered["topics"] = g_word_delivered
+      g_manage_delivered["topics"] = g_topic_delivered
       _place_topics(g_topic_delivered)
     }
   }
@@ -2647,8 +2642,10 @@ function show_moveable_links(which_list) {
     let display_links = sel_vals.map(value => {
       let disp_links = a_map[value]
       let links = ""
+      if ( !(Array.isArray(disp_links)) && (typeof disp_links === "object") ) {
+        disp_links = Object.keys(disp_links)
+      }
       if ( disp_links && disp_links.length ) {
-
         disp_links = disp_links.map(a_link => {
           return `<span class="drag_link" draggable="true" style="border-bottom:solid 1px snow;margin-bottom:1px;"  ondragstart="event.dataTransfer.setData('text/plain','${value}${DRAG_SEP}${a_link}')">${a_link}</span>`
         })
@@ -2712,6 +2709,41 @@ function get_url_map_key(str) {
 
 
 
+function title_from_context(url,from_key,from_map,source_context) {
+  //
+  switch ( source_context ) {
+    case "topics" :
+    case "domains" : {
+      let source_obj = from_map[from_key]
+      return source_obj[url]
+      break
+    }
+    case "words" : {
+      break
+    }
+    case "windows" : {
+      let windows = g_manage_delivered[source_context]
+      let a_window = windows.find((w) => {
+        if ( from_key === w.descr ) {
+          return true
+        }
+        return false
+      })
+      if ( a_window ) {
+        let tabs = a_window.tabs
+        let tab_obj = tabs.find(tab => {
+          return tab.url === url
+        })
+        if ( tab_obj ) return tab_obj.title
+      }
+      break
+    }
+  }
+  return "test"
+}
+
+
+
 function handle_drop_link(event,source_context,dest_context,element) {
   //
   event.preventDefault();
@@ -2724,25 +2756,38 @@ function handle_drop_link(event,source_context,dest_context,element) {
       let [a_to_list,to_map] = get_edit_lists(dest_context)
       let [a_from_list,from_map] = get_edit_lists(source_context)
       //
-      let title = title_from_context(url,source_context)      // always keep titles with the URL...
+      let title = title_from_context(url,from_key,from_map,source_context)      // always keep titles with the URL...
       //
       let to_list = to_map[element]
       let from_list = from_map[from_key]
       //
       if ( !(event.altKey) ) {
-        let idx = from_list.indexOf(url)
-        if ( idx >= 0 ) {
-          from_list.splice(idx,1)
+        if ( Array.isArray(to_list) ) {
+          let idx = to_list.indexOf(url)
+          if ( idx >= 0 ) {
+            to_list.splice(idx,1)
+          }
+        } else {
+          if ( to_list[url] ) delete to_list[url]
         }
       }
-      if ( push_if_new(to_list,{ "url" : url, "title" : title }) ) {
-        dirty_edit_update(true,dest_context)
+
+
+      if ( Array.isArray(to_list) ) {
+        if ( push_if_new(to_list, url) ) {
+          dirty_edit_update(true,dest_context)
+        }
+      } else {
+        if ( set_if_new(to_list, { "url" : url, "title" : title }) ) {
+          dirty_edit_update(true,dest_context)
+        }
       }
       //
       show_links(dest_context)
       show_links(source_context)
       //
-      change_save_state_move(url,title,source_context,dest_context,element)
+      if ( event.altKey ) source_context = "DONT"   /// don't change the source 
+      change_save_state_move(url,title,source_context,dest_context,element,from_key)
     }
   }
 }
@@ -2882,6 +2927,53 @@ function show_links(which_list) {
 }
 
 
+function new_window_object(value) {
+  let wobj = {
+    "link" : "/www.copious.world",
+    "descr" : value,
+    "tabs" : []
+  }
+  return wobj
+}
+
+
+function new_word_object(value) {
+  let wobj = {
+    '_count': 1,
+    '_url_list' : {},
+    '_word' : value,
+    'keep': false
+  }
+  return wobj
+}
+
+
+function extend_lists(category,value,a_list,a_map) {
+  switch ( category ) {
+    case "topics"  :
+    case "domains" : {
+      a_list.push(value)
+      a_map[value] = {}
+      let keeps = g_manage_delivered[category]
+      keeps[value] = {}
+      break;
+    }
+    case "words" : {
+      a_list.push(value)
+      a_map[value] = []
+      let keeps = g_manage_delivered["words"]
+      keeps[value] = new_word_object(value)
+      break;
+    }
+    case "windows" : {
+      a_list.push(value)
+      a_map[value] = []
+      g_manage_delivered["windows"].push(new_window_object(value))
+      break;
+    }
+  }
+}
+
 
 
 function _add_to(category,value) {
@@ -2891,7 +2983,7 @@ function _add_to(category,value) {
     if ( b === undefined ) {
       dirty_edit_update(true,category)
 
-      //
+      //  this is about saving the checked boxes and leaving them on display
       let name = `op_list_${category}`
       let checkedBoxes = document.querySelectorAll(`input[name=${name}]:checked`);
       let len = checkedBoxes.length
@@ -2901,12 +2993,13 @@ function _add_to(category,value) {
         save_checks.push(bx.id)
       }
 
-      a_map[value] = []
-      a_list.push(value)
+      extend_lists(category,value,a_list,a_map)
+
       //  Also, take care of the editing lists....
       install_editing(a_list,`edit-left-${category}`,category)
       front_view(category)
 
+      // put the check marks back
       for ( let bx_id of save_checks ) {
         let bx_el = document.getElementById(bx_id)
         bx_el.checked = true

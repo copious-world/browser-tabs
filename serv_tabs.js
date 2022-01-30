@@ -18,7 +18,7 @@ app.use(express.json())
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 //  PROGRAM EXIT
 process.on('SIGINT',(sig) => {
-    admin.dump_topcis_and_domains()
+    admin.dump_topics_and_domains()
     process.exit(0)
 })
 

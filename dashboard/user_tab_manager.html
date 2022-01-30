@@ -2027,6 +2027,16 @@ let g_dirty_edits = {
   },
 }
 
+
+let g_manage_delivered = {
+  "words" : g_word_delivered,
+  "topics" : g_topic_delivered,
+  "domains" : g_domain_delivered,
+  "windows" :g_window_delivered
+}
+
+/// /// /// /// /// /// /// // // // // // //
+
 function dirty_edit_update(state,category) {
   if ( state ) {
     let vardescr = g_dirty_edits[category]
@@ -2088,6 +2098,138 @@ function add_all_deletes(category,del_vals) {
     insert_deleted(category,val)
   }
 }
+
+
+/*
+
+"_word_list": {
+  "master": {
+    "_word": "master",
+    "_count": 6,
+    "_url_list": {
+      "https://github.com/ipfs/devgrants/blob/master/open-grants/README.md": "devgrants/README.md at master · ipfs/devgrants · GitHub",
+      "https://github.com/filecoin-project/specs/tree/master/content": "specs/content at master · filecoin-project/specs",
+      "https://github.com/yehia67/IPFS-Tangle-Database-System/tree/master/actions/Functions": "IPFS-Tangle-Database-System/actions/Functions at master · yehia67/IPFS-Tangle-Database-System · GitHub",
+      "https://github.com/ipfs/js-ipfs/tree/master/docs/core-api": "js-ipfs/docs/core-api at master · ipfs/js-ipfs · GitHub",
+      "https://github.com/ipfs/js-ipfs/blob/master/docs/core-api/PIN.md": "js-ipfs/PIN.md at master · ipfs/js-ipfs · GitHub",
+      "https://github.com/peter-suggate/wasm-audio-app/blob/master/src/PitchNode.js": "wasm-audio-app/PitchNode.js at master · peter-suggate/wasm-audio-app · GitHub"
+    },
+    "keep": true
+  },
+*/
+/// e.g. server side (from admin, via /user/:uid) 
+///       _all_topics is g_manage_delivered["topics"]  -- all_topics[topic] -> {<url,title>} 
+//
+function change_save_state_move(url,title,source_context,dest_context,dest_holding_element,source_holding_element) {
+  if ( dest_context ) {
+    switch ( dest_context ) {
+      case "topics":
+      case "domains": {
+        let c_data = g_manage_delivered[dest_context]
+        if ( c_data[url] === undefined ) {
+          c_data[url] = title         /// maintain url,title pairing
+        }
+        break
+      }
+      case "words" : {
+        let word_data = g_manage_delivered[dest_context]
+        if ( word_data ) {
+          let word_obj = g_manage_delivered[dest_holding_element]
+          if ( word_obj ) {
+            let c_data = word_obj._url_list
+            if ( c_data[url] === undefined ) {
+              c_data[url] = title
+            }
+          }
+        }
+        break;
+      }
+      case "windows" : {
+        let c_data_list = g_manage_delivered[dest_context]   // this should be an array
+        if ( c_data_list ) {
+          let c_data_entry = c_data_list.find((entry) => {
+            if ( entry.link ) {
+              if ( entry.link === dest_holding_element ) {
+                return true
+              }
+            }
+            return false
+          })
+          if ( c_data_entry ) {
+            let c_data = c_data_entry.tabs.find((entry) => {
+                                                if ( entry.link ) {
+                                                  if ( entry.link === url ) {
+                                                    return true
+                                                  }
+                                                }
+                                                return false
+                                              })
+            if ( c_data ) {
+              c_data.push({
+                "url" : url,
+                "title" : title
+              })
+            }
+          }
+        }
+
+        break
+      }
+    }
+  }
+  if ( source_context ) {
+    switch ( source_context ) {
+      case "topics":
+      case "domains": {
+        let c_data = g_manage_delivered[source_context]
+        if ( c_data[url] !== undefined ) {
+          delete c_data[url]
+        }
+        break
+      }
+      case "words" : {
+        let word_data = g_manage_delivered[source_context]
+        if ( word_data ) {
+          let word_obj = g_manage_delivered[source_holding_element]
+          if ( word_obj ) {
+            let c_data = word_obj._url_list
+            if ( c_data[url] !== undefined ) {
+              delete c_data[url]
+            }
+          }
+        }
+        break;
+      }
+      case "window" : {
+        let c_data_list = g_manage_delivered[source_context]   // this should be an array
+        if ( c_data_list ) {
+          let c_data_entry = c_data_list.find((entry) => {
+            if ( entry.link ) {
+              if ( entry.link === source_holding_element ) {
+                return true
+              }
+            }
+            return false
+          })
+          if ( c_data_entry ) {
+            let c_data_index = c_data_entry.tabs.findIndex((entry) => {
+                                                if ( entry.link ) {
+                                                  if ( entry.link === url ) {
+                                                    return true
+                                                  }
+                                                }
+                                                return false
+                                              })
+          if ( c_data_index >= 0 ) {
+            c_data_entry.tabs.splice(c_data_index,1)
+          }
+        }                                              
+        break;
+      }
+    }
+  }
+}
+
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -2283,7 +2425,7 @@ let g_window_delivered = {} // windows exactly what came from the server
 function _place_windows(u_info) {
   g_last_shown_list = []
   g_window_map = {}
-  let info = u_info.map(window_descr => {
+  let info = u_info.map(window_descr => {    // map on array
     let wtabs = window_descr.tabs
     if ( wtabs ) {
       wtabs = wtabs.map((ldescr) => {
@@ -2329,6 +2471,7 @@ async function fetch_user_windows(user) {
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
       g_window_delivered = response.data
+      g_manage_delivered["windows"] = g_word_delivered
       _place_windows(g_window_delivered)
     }
   }
@@ -2361,6 +2504,7 @@ async function fetch_user_domains(user) {
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
       g_domain_delivered = response.data
+      g_manage_delivered["domains"] = g_word_delivered
       _place_domains(g_domain_delivered)
     }
   }
@@ -2399,6 +2543,7 @@ async function fetch_user_topics(user) {
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
       g_topic_delivered = response.data
+      g_manage_delivered["topics"] = g_word_delivered
       _place_topics(g_topic_delivered)
     }
   }
@@ -2430,6 +2575,7 @@ async function fetch_user_words(user) {
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
       g_word_delivered = response.data
+      g_manage_delivered["words"] = g_word_delivered
       _place_words(g_word_delivered)
     }
   }
@@ -2524,7 +2670,7 @@ function show_moveable_links(which_list) {
   }
 }
 
-
+// gets value from checkboxes 
 function show_drop_operators(which_list,context) {
   //
   let container = document.getElementById(`${which_list}-grid-${context}`)
@@ -2574,9 +2720,11 @@ function handle_drop_link(event,source_context,dest_context,element) {
     const data = event.dataTransfer.getData("text/plain");
     let [from_key,url] = get_url_map_key(data)
     if ( from_key ) {
-      //
+      //  DISPLAY LIST CHANGES
       let [a_to_list,to_map] = get_edit_lists(dest_context)
       let [a_from_list,from_map] = get_edit_lists(source_context)
+      //
+      let title = title_from_context(url,source_context)      // always keep titles with the URL...
       //
       let to_list = to_map[element]
       let from_list = from_map[from_key]
@@ -2587,12 +2735,14 @@ function handle_drop_link(event,source_context,dest_context,element) {
           from_list.splice(idx,1)
         }
       }
-      if ( push_if_new(to_list,url) ) {
+      if ( push_if_new(to_list,{ "url" : url, "title" : title }) ) {
         dirty_edit_update(true,dest_context)
       }
       //
       show_links(dest_context)
       show_links(source_context)
+      //
+      change_save_state_move(url,title,source_context,dest_context,element)
     }
   }
 }
@@ -2657,19 +2807,24 @@ function handle_drop_link_trash(event) {
     //
     if ( g_current_source_context !== 'trash' ) {
       let source_context = g_current_source_context
+      //
       let [a_from_list,from_map] = get_edit_lists(source_context)
+      let title = title_from_context(url,source_context)      // always keep titles with the URL...
+      //
       let from_list = from_map[from_key]
       if ( from_list ) {
         let idx = from_list.indexOf(url)
         if ( idx >= 0 ) {
           from_list.splice(idx,1)   // remove
           let [the_date,to_list] = trash_to_date() // trash list 
-          if ( push_if_new(to_list,url) ) {
+          if ( push_if_new(to_list,{ "url" : url, "title" : title }) ) {
             dirty_edit_update(true,source_context)
           }
           trash_to_db(the_date)
           show_links('trash')
           show_links(source_context)
+          //
+          change_save_state_move(url,title,source_context,false,from_key)
         }
       }
     }

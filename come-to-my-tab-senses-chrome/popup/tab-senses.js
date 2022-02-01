@@ -1,5 +1,6 @@
 let DEFAULT_URL = 'localhost:3111'
 let CHOSEN_URL = DEFAULT_URL
+let PRE_CHOICE_URL = "localhost:3111/server_options"
 //
 let SERVER_PUT_TABS = `http://${CHOSEN_URL}/put_tabs`
 let SERVER_PUT_WINDOW = `http://${CHOSEN_URL}/put_window`
@@ -286,6 +287,7 @@ async function retrieve_tab_topics(post_channel,result_location,without_filter,c
   return false
 }
 
+//
 
 
 // ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -937,11 +939,37 @@ async function do_interface_from_storage() {
 
 
 
+async function retrieve_server_options() {
+  try {
+    let postable = {
+        "source" : "copous-world-extension"
+    }
+    let response = await postData(PRE_CHOICE_URL,postable)
+    if ( response.OK === "true" ) {
+      let data = response.data
+      let result_location = response.option_html
+      if ( result_location === "select-host-options" ) {
+        let options_spot = document.getElementById(result_location)
+        if ( options_spot ) {
+          options_spot.innerHTML = data  /// expects HTML
+          return true
+        } 
+      }
+    }
+  } catch(e) {
+      alert(e.message)
+  }
+  return false
+}
+
+
+
 /**
  * When the popup loads, inject a content script into the active tab,
  * and add a click handler.
  * If we couldn't inject the script, handle the error.
 */
+retrieve_server_options()
 listenForClicks()
 initialize_dashboard()
 initialize_user_interface()

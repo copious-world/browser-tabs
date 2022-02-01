@@ -86,6 +86,16 @@ async function load_ml_alternatives()  {
     }
 }
 
+
+async function load_mirror_list() {
+    try {
+        await admin.load_mirror_list()
+    } catch (e) {
+        console.dir(e)
+        console.log(`failed to load ml_list.json`)
+    }
+}
+
 // ---- ---- ---- ---- ---- ---- ---- ---- ----
 // ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -149,7 +159,6 @@ app.get('/admin/:id_token', async (req, res) => {
     if ( g_admin_id === id_token ) {
         try {
 
-
             let ml_methods = admin.list_ml_methods_html()
 
 
@@ -212,6 +221,7 @@ app.post('/user/:id_token', async (req, res) => {
 })
 
 
+// 
 app.post('/select-host', async (req, res) => {
     //
     let body = req.body;
@@ -229,6 +239,26 @@ app.post('/select-host', async (req, res) => {
 
     }
 })
+
+// option_html
+app.post('/server_options', async (req, res) => {
+    //
+    let body = req.body;
+    //
+    try {
+        if ( ( body.source === undefined )|| ( req.body.source !== "copous-world-extension" ) ) {
+            return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'false' })));
+        } else {
+            let server_list = amdin.get_server_list() /// expects HTML
+            return(res.status(200).send(JSON.stringify({ 'type' : 'admin', 'OK' : "true", "data" : server_list })));
+        }
+    } catch (e) {
+
+    }
+})
+
+
+
 
 // PATHS
 // ---- ---- ---- ---- ---- ---- ---- ---- ----
@@ -487,8 +517,8 @@ app.post('/undo',(req, res) => {
 
 // LOAD INITIALIZATION METHODS
 //
+load_mirror_list()
 load_topics_and_domains()
-
 load_ml_alternatives()
 
 //

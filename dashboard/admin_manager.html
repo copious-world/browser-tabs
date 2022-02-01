@@ -319,10 +319,15 @@ button {
 
 
   <div id="admin_plugins" class="tabcontent" >
-    <h4>Manage Plugins For ML/NLU</h4> 
-    <ul id="plugin_manager">
-      <li>default</li>
-    </ul>
+    <h4>Manage Plugins For ML/NLU</h4>
+    <div>
+      Add a new ML Method: <input id="ml_name" type="text" value="default" />&nbsp;&nbsp;<button onclick="add_ml_option('ml_name')">add now</button>&nbsp;&nbsp;<button onclick="delete_ml_option('ml_name')">delete now</button>
+    </div>
+    <div>
+      <ul id="plugin_manager">
+        $$ML_METHODS
+      </ul>  
+    </div>
   </div>
  
   <div id="window_ulisted" class="tabcontent" >
@@ -1265,6 +1270,56 @@ function show_status(msg) {
 }
 
 
+
+async function add_ml_option(source_id) {
+  let source_fld = document.getElementById(source_id)
+  if ( source_fld ) {
+    let npm_package_name = source_fld.value
+    if ( npm_package_name.length ) {
+      if ( npm_package_name in g_ml_data ) {
+        alert("Package name already in use")
+        return
+      } 
+      let postable = {
+        "cmd" : "install_ml",
+        "ml_nlu_select" : npm_package_name
+      }
+      let response = await postData(SERVER_ADMIN_CMD,postable)
+      if ( response.OK === "true" ) {
+        show_status("OK")
+      }
+    }
+  }
+}
+
+
+
+async function delete_ml_option(source_id) {
+  let source_fld = document.getElementById(source_id)
+  if ( source_fld ) {
+    let npm_package_name = source_fld.value
+    if ( npm_package_name.length ) {
+      if ( !(npm_package_name in g_ml_data) ) {
+        alert("Package name not in use")
+        return
+      }
+      if ( npm_package_name === "default" ) {
+        alert("cannot delete 'default' : built-in")
+        return
+      }
+      let postable = {
+        "cmd" : "delete_ml",
+        "ml_nlu_select" : npm_package_name
+      }
+      let response = await postData(SERVER_ADMIN_CMD,postable)
+      if ( response.OK === "true" ) {
+        show_status("OK")
+      }
+    }
+  }
+}
+
+
 async function backup_users() {
   let postable = {
       "cmd" : "backup"
@@ -1295,5 +1350,22 @@ async function shutdown_server() {
     show_status("OK")
   }
 }
+
+
+
+let g_ml_data = {}
+async function get_ml_data() {
+  let postable = {
+      "cmd" : "list-ml"
+    }
+    let response = await postData(SERVER_ADMIN_CMD,postable)
+    if ( response.OK === "true" ) {
+      g_ml_data = response.data
+    }
+}
+
+
+get_ml_data()
+
 
 </script>

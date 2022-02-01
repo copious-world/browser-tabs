@@ -77,6 +77,15 @@ async function load_topics_and_domains() {
 }
 
 
+async function load_ml_alternatives()  {
+    try {
+        await admin.load_ml_list()
+    } catch (e) {
+        console.dir(e)
+        console.log(`failed to load ml_list.json`)
+    }
+}
+
 // ---- ---- ---- ---- ---- ---- ---- ---- ----
 // ---- ---- ---- ---- ---- ---- ---- ---- ----
 
@@ -139,10 +148,16 @@ app.get('/admin/:id_token', async (req, res) => {
     //
     if ( g_admin_id === id_token ) {
         try {
+
+
+            let ml_methods = admin.list_ml_methods_html()
+
+
             let hdata = await fsPromise.readFile("./dashboard/admin_manager.html")
             hdata = hdata.toString()
             hdata = hdata.replace("$$USER_IDENTIFIER",id_token)
             hdata = hdata.replace("$$USER_IDENTIFIER",id_token)
+            hdata = hdata.replace("$$ML_METHODS",ml_methods)
             res.send(hdata)
         } catch (e) {
             console.log(`failed to load salvage_run.json`)
@@ -473,6 +488,8 @@ app.post('/undo',(req, res) => {
 // LOAD INITIALIZATION METHODS
 //
 load_topics_and_domains()
+
+load_ml_alternatives()
 
 //
 let port = 3111

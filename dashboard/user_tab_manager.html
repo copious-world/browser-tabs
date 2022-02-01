@@ -403,24 +403,34 @@ button {
     <h4>List of Stored Topics</h4> 
     <div style="max-width: 300px">Edit your top five key words. Then, click 
       <button class="cluster" onclick="save_with_cluster(event)">cluster</button> to update your topics</div>
-    <ol id="user_clusters">
-        <li>
-          <input id="uc_1" type="text" value = "" />
-        </li>
-        <li>
-          <input id="uc_2" type="text" value = "" />
-        </li>
-        <li>
-          <input id="uc_3" type="text" value = "" />
-        </li>
-        <li>
-          <input id="uc_4" type="text" value = "" />
-        </li>
-        <li>
-          <input id="uc_5" type="text" value = "" />
-        </li>
-      </ol>
+      <div class="tabcontent-sub" style="display:inline-block;height:150px;overflow:auto;width:25%" >
+        <ol id="user_clusters">
+          <li>
+            <input id="uc_1" type="text" value = "" />
+          </li>
+          <li>
+            <input id="uc_2" type="text" value = "" />
+          </li>
+          <li>
+            <input id="uc_3" type="text" value = "" />
+          </li>
+          <li>
+            <input id="uc_4" type="text" value = "" />
+          </li>
+          <li>
+            <input id="uc_5" type="text" value = "" />
+          </li>
+        </ol>
+    </div>
+    <div class="tabcontent-sub" style="display:inline-block;height:150px;overflow:auto;width:25%" >
+      <div style="text-align: center;font-weight: bold;color:green;border-bottom: 1px solid rgb(2, 46, 46);">Manage Clustering and Classification</div>
+      <div style="text-align: right;font-weight: bold;color:green;border-bottom: 1px solid rgb(2, 46, 46);"><button onclick="save_clustering_selection(event)">confirm selection</button></div>
+      <select id="select-ml-options"  name="choose_ml" >
+
+      </select>
+    </div>
   </div>
+
 
 
   <div id="edit_topics" class="tabcontent" >
@@ -1542,21 +1552,6 @@ async function tab_field_saver(tab_field,post_action,opt_cluster_points) {
 }
 
 
-function get_cluster_point_list() {
-  let points = []
-  for ( let i = 0; i < 5; i++ ) {
-    let c_val_holder = document.getElementById(`uc_${i+1}`)
-    if ( c_val_holder ) {
-      let term_point = c_val_holder.value
-      term_point = term_point.trim()
-      if ( term_point.length ) {
-        points.push(term_point)
-      }
-    }
-  }
-  return (points.length ? points : undefined)
-}
-
 
 
 
@@ -1779,12 +1774,49 @@ async function save_everything(ev) {
 }
 
 
+
+
+
+/// CLUSTERING SAVE -- save_with_cluster
+// ------ ------ ------ ------ ------ ------ ------ ------ ------
+
+
+function get_cluster_point_list() {
+  let points = []
+  for ( let i = 0; i < 5; i++ ) {
+    let c_val_holder = document.getElementById(`uc_${i+1}`)
+    if ( c_val_holder ) {
+      let term_point = c_val_holder.value
+      term_point = term_point.trim()
+      if ( term_point.length ) {
+        points.push(term_point)
+      }
+    }
+  }
+  return (points.length ? points : undefined)
+}
+
+
 async function save_with_cluster(event) {
   let cluster_points = get_cluster_point_list()
   if ( cluster_points ) {
     await save_tabs(cluster_points)
   }
 }
+
+
+function fill_topic_dims(topic_dims) {
+  let cluser_entry = "uc_"
+  for ( let i = 0; i < topic_dims.length; i++ ) {
+    let val = topic_dims[i]
+    let val_loc = cluser_entry + i
+    let val_el = document.getElementById(val_loc) 
+    if ( val_loc ) {
+      val_loc.value = val
+    }
+  }
+}
+
 
 
 
@@ -1795,6 +1827,9 @@ async function save_tabs(cluster_points) {
     await tab_field_saver('tab_list',SERVER_PUT_TABS)
   }
 }
+
+// ------ ------ ------ ------ ------ ------ ------ ------ ------
+// ------ ------ ------ ------ ------ ------ ------ ------ ------
 
 
 
@@ -1814,6 +1849,26 @@ async function save_user_info(user,category,data,deleted) {
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK !== "true" ) {
       console.log("oops")
+    }
+  }
+}
+
+
+async function save_clustering_selection(ev) {
+  let disp_drop = document.getElementById("user-data")
+  if ( disp_drop ) {
+    let option_el = document.getElementById("select-ml-options")
+    if ( option_el ) {
+      let current_choice = option_el.value
+      let postable = {
+        "cmd" : `ml_nlu_select`,
+        "user" : '$$USER_IDENTIFIER',
+        "ml_nlu_select" : current_choice
+      }
+      let response = await postData(USER_ADMIN_CMD,postable)
+      if ( response.OK !== "true" ) {
+        console.log("oops")
+      }
     }
   }
 }
@@ -1882,7 +1937,25 @@ function update_dash_link(ev) {
   }
 }
 
-setup_key_event() 
+setup_key_event()
+
+
+
+
+
+
+
+function setup_display_clustering_options(sys_add_ml_possibilities,current_choice) {
+  let option_el = document.getElementById("select-ml-options")
+  if ( option_el ) {
+    let opts_html = ""
+    for ( let ml_opt in sys_add_ml_possibilities ) {
+      opts_html += `<option>${ml_opt}</option>`
+    }
+    option_el.innerHTML = opts_html
+    option_el.value = current_choice
+  }
+}
 
 
 
@@ -1895,10 +1968,29 @@ async function fetch_user_info(user) { // ---- ---- ---- ---- ---- ---- ---- ---
     }
     let response = await postData(USER_ADMIN_CMD,postable)
     if ( response.OK === "true" ) {
-      let u_info = response.data
+      let user = response.data
       let info_loc = document.getElementById("user_list")
       if ( info_loc ) {
-        info_loc.innerHTML = u_info
+        //
+        let info = `email: ${user.email}&nbsp;&nbsp;&nbsp;&nbsp;blocked ?> ${user.blocked} Selected ML: ${user.ml_selector}<br>`
+        info += `_word_list #: ${user._word_list_count}<br>`
+        info += `_topics #: ${user._topics}<br>`
+        info += `_domains #: ${user._domains_count}<br>`
+        info += `_windows #: ${user._windows_count}<br>`
+        info += `_all_topics #: ${user._all_topics_count}<br>`
+        info += `_all_domains #: ${user._all_domains_count}<br>`
+        info += `_topic_dims (${user._topic_dims.length}): ${user._topic_dims.join(',')}`
+        //
+        info_loc.innerHTML = info
+
+        if ( user._topic_dims.length > 0 ) {
+          fill_topic_dims(user._topic_dims)
+        }
+
+        if ( user._sys_add_ml_possibilities ) {
+          setup_display_clustering_options(user._sys_add_ml_possibilities,user.ml_selector)
+        }
+
       }
     }
   }

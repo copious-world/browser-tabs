@@ -1075,7 +1075,16 @@ async function fetch_user_info(user) { // ---- ---- ---- ---- ---- ---- ---- ---
       let u_info = response.data
       let info_loc = document.getElementById("user-data")
       if ( info_loc ) {
-        info_loc.innerHTML = u_info
+        //
+        let info = `email: ${u_info.email}&nbsp;&nbsp;&nbsp;&nbsp;blocked ?> ${u_info.blocked} Selected ML: ${u_info.ml_selector}<br>`
+        info += `_word_list #: ${u_info._word_list_count}<br>`
+        info += `_topics #: ${u_info._topics_count}<br>`
+        info += `_domains #: ${u_info._domains_count}<br>`
+        info += `_windows #: ${u_info._windows_count}<br>`
+        info += `_all_topics #: ${u_info._all_topics_count}<br>`
+        info += `_all_domains #: ${u_info._all_domains_count}<br>`
+        //
+        info_loc.innerHTML = info
       }
     }
   }

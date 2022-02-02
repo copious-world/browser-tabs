@@ -189,7 +189,7 @@ app.post('/admin/:id_token', async (req, res) => {
         let body = req.body
         let result = "false"
         if ( body.cmd ) {
-            data = admin.command(body.cmd,body)
+            data = await admin.command(body.cmd,body)
             if ( data ) {
                 return(res.status(200).send(JSON.stringify({ 'type' : 'admin', 'OK' : "true", "data" : data })));
             }
@@ -209,7 +209,7 @@ app.post('/user/:id_token', async (req, res) => {
         let body = req.body
         let result = "false"
         if ( body.cmd ) {
-            data = admin.command(body.cmd,body)
+            data = await admin.command(body.cmd,body)
             if ( data ) {
                 return(res.status(200).send(JSON.stringify({ 'type' : 'admin', 'OK' : "true", "data" : data })));
             }
@@ -246,11 +246,11 @@ app.post('/server_options', async (req, res) => {
     let body = req.body;
     //
     try {
-        if ( ( body.source === undefined )|| ( req.body.source !== "copous-world-extension" ) ) {
+        if ( ( body.source === undefined )|| ( body.source !== "copious-world-extension" ) ) {
             return(res.status(200).send(JSON.stringify({ 'type' : 'tabs', 'OK' : 'false' })));
         } else {
-            let server_list = amdin.get_server_list() /// expects HTML
-            return(res.status(200).send(JSON.stringify({ 'type' : 'admin', 'OK' : "true", "data" : server_list })));
+            let server_list = admin.get_server_list() /// expects HTML
+            return(res.status(200).send(JSON.stringify({ 'type' : 'admin', 'OK' : "true", "required_location" : "select-host-options", "data" : server_list })));
         }
     } catch (e) {
 

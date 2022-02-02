@@ -1,6 +1,6 @@
 let DEFAULT_URL = 'localhost:3111'
 let CHOSEN_URL = DEFAULT_URL
-let PRE_CHOICE_URL = "localhost:3111/server_options"
+let PRE_CHOICE_URL = "http://localhost:3111/server_options"
 //
 let SERVER_PUT_TABS = `http://${CHOSEN_URL}/put_tabs`
 let SERVER_PUT_WINDOW = `http://${CHOSEN_URL}/put_window`
@@ -942,12 +942,13 @@ async function do_interface_from_storage() {
 async function retrieve_server_options() {
   try {
     let postable = {
-        "source" : "copous-world-extension"
+        "source" : "copious-world-extension"
     }
     let response = await postData(PRE_CHOICE_URL,postable)
     if ( response.OK === "true" ) {
       let data = response.data
-      let result_location = response.option_html
+      let result_location = response.required_location
+      //
       if ( result_location === "select-host-options" ) {
         let options_spot = document.getElementById(result_location)
         if ( options_spot ) {
